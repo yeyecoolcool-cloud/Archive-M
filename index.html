@@ -2809,8 +2809,11 @@
     function renderAll() {
       const filtered = getFilteredAds();
       updateStats(filtered);
-      if (state.mode === "timeline") renderTimeline(filtered);
-      if (state.mode === "graph") renderGraph(filtered);
+      if (state.mode === "graph") {
+        renderGraph(filtered);
+      } else {
+        renderTimeline(filtered);
+      }
     }
 
     function getFilteredAds() {
@@ -2836,7 +2839,7 @@
     function renderTimeline(filtered) {
       const stage = refs.timelineStage;
       stage.innerHTML = "";
-      // Timeline uses pre-generated thumbnails, so we do not preload all original images for sizing.
+      // 缩略图稳定版：不再根据视野卸载图片，避免拖动/缩放时图片突然消失。
       const gapX = 34;
       const leftPad = 74;
       const topPad = 24;
@@ -2869,6 +2872,8 @@
       };
 
       const filteredSet = new Set(filtered.map(d => d.id));
+      const fragment = document.createDocumentFragment();
+
       state.allAds.forEach((ad, adIndex) => {
         const idx = state.issueIndexMap.get(ad.issueKey);
         if (idx == null) return;
@@ -2884,10 +2889,16 @@
         el.style.borderBottomColor = ad.color;
 
         const img = document.createElement("img");
-        img.src = ad.thumbSrc || ad.imgSrc;
         img.alt = ad.id;
-        img.loading = "eager";
+        img.loading = "lazy";
         img.decoding = "async";
+        img.fetchPriority = "low";
+        img.src = ad.thumbSrc || ad.imgSrc;
+        img.onerror = () => {
+          if (img.dataset.fallbackLoaded === "1") return;
+          img.dataset.fallbackLoaded = "1";
+          img.src = ad.imgSrc;
+        };
         el.appendChild(img);
 
         el.addEventListener("mouseenter", (e) => showTooltip(e, ad));
@@ -2899,22 +2910,24 @@
           if (!filteredSet.has(ad.id)) return;
           openDetailModal(ad);
         });
-        stage.appendChild(el);
+        fragment.appendChild(el);
       });
 
+      stage.appendChild(fragment);
       applyCamera("timeline");
     }
 
     function getTimelineAdSize(ad) {
-      // Fixed-size thumbnail slots avoid 3000+ dimension-probing image requests on first load.
+      // 缩略图阶段不再为了计算宽度预加载全部原图元数据。
+      // 固定尺寸可避免视野变化时因为重排导致图片闪烁或消失。
       return {
-        w: 18,
+        w: 22,
         h: TIMELINE_AD_IMG_H
       };
     }
 
     function primeTimelineAdImageMeta() {
-      // No-op: timeline thumbnails are fixed-size for fast first paint.
+      // 缩略图稳定版不预加载全部图片元数据。
     }
 
     function renderGraph(filtered) {
@@ -3046,7 +3059,7 @@
             .attr("width", d => d.w)
             .attr("height", d => d.h)
             .attr("preserveAspectRatio", "xMidYMid meet")
-            .attr("href", d => d.payload.imgSrc);
+            .attr("href", d => d.payload.thumbSrc || d.payload.imgSrc);
           adBody.append("rect")
             .attr("class", "graph-ad-hitbox")
             .attr("x", d => -d.w / 2)
@@ -3361,7 +3374,8 @@
     }
 
     function getGraphAdSize(ad) {
-      const meta = ad && ad.imgSrc ? adImageMetaCache.get(ad.imgSrc) : null;
+      const metaSrc = ad && (ad.thumbSrc || ad.imgSrc);
+      const meta = metaSrc ? adImageMetaCache.get(metaSrc) : null;
       const sourceW = meta && Number.isFinite(meta.w) && meta.w > 0 ? meta.w : GRAPH_AD_FALLBACK_W;
       const sourceH = meta && Number.isFinite(meta.h) && meta.h > 0 ? meta.h : GRAPH_AD_FALLBACK_H;
       const scale = Math.min(GRAPH_AD_MAX_W / sourceW, GRAPH_AD_MAX_H / sourceH);
@@ -3411,7 +3425,7 @@
       );
       if (!ads.length) return;
       const pending = ads
-        .map(ad => ensureAdImageMeta(ad.imgSrc))
+        .map(ad => ensureAdImageMeta(ad.thumbSrc || ad.imgSrc))
         .filter(Boolean);
       if (!pending.length) return;
       const snapshot = {
@@ -3800,8 +3814,6 @@
 
     function openDetailModal(ad) {
       state.detailAd = ad;
-      refs.detailImg.loading = "eager";
-      refs.detailImg.decoding = "async";
       refs.detailImg.src = ad.imgSrc;
       refs.detailTitle.textContent = ad.id;
       refs.detailMeta.textContent = ad.year + " 年 / 第 " + ad.issue + " 期 / " + ad.industry + " / " + ad.product;
@@ -3833,7 +3845,7 @@
           const tagClass = tagLen >= 7 ? " tight" : (tagLen >= 5 ? " compact" : "");
           const idLen = (item.ad.id || "").length;
           const idClass = idLen >= 13 ? " tight" : (idLen >= 11 ? " compact" : "");
-          card.innerHTML = "<img src=\"" + item.ad.imgSrc + "\" alt=\"\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\">" + escapeHtml(item.ad.industry) + "</span><span class=\"mini-tag\">" + escapeHtml(item.ad.product) + "</span></div></div></div>";
+          card.innerHTML = "<img loading=\"lazy\" decoding=\"async\" src=\"" + (item.ad.thumbSrc || item.ad.imgSrc) + "\" alt=\"\" onerror=\"this.onerror=null;this.src=\'" + item.ad.imgSrc + "\';\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\">" + escapeHtml(item.ad.industry) + "</span><span class=\"mini-tag\">" + escapeHtml(item.ad.product) + "</span></div></div></div>";
           card.addEventListener("click", () => openDetailModal(item.ad));
           refs.similarRow.appendChild(card);
         });
