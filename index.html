@@ -2059,9 +2059,6 @@
       "未知": "#cbc6bc"
     };
 
-    const IMAGE_BASE_URL = "https://archive-m-images.oss-cn-hongkong.aliyuncs.com/images/";
-    const THUMB_BASE_URL = "https://archive-m-images.oss-cn-hongkong.aliyuncs.com/thumbs/";
-
     const TIMELINE_MIN_SCALE = 0.22;
     const TIMELINE_MAX_SCALE = 4.8;
     const TIMELINE_SIDE_MARGIN = 18;
@@ -2643,8 +2640,7 @@
         product,
         color: INDUSTRY_COLORS[industry] || INDUSTRY_COLORS["其他"],
         tagList,
-        imgSrc: IMAGE_BASE_URL + id + ".png",
-        thumbSrc: THUMB_BASE_URL + id + ".png"
+        imgSrc: "images/" + id + ".png"
       };
     }
 
@@ -2809,11 +2805,8 @@
     function renderAll() {
       const filtered = getFilteredAds();
       updateStats(filtered);
-      if (state.mode === "graph") {
-        renderGraph(filtered);
-      } else {
-        renderTimeline(filtered);
-      }
+      renderTimeline(filtered);
+      renderGraph(filtered);
     }
 
     function getFilteredAds() {
@@ -2839,6 +2832,7 @@
     function renderTimeline(filtered) {
       const stage = refs.timelineStage;
       stage.innerHTML = "";
+      primeTimelineAdImageMeta();
       const gapX = 34;
       const leftPad = 74;
       const topPad = 24;
@@ -2886,9 +2880,7 @@
         el.style.borderBottomColor = ad.color;
 
         const img = document.createElement("img");
-        img.loading = "lazy";
-        img.decoding = "async";
-        img.src = ad.thumbSrc || ad.imgSrc;
+        img.src = ad.imgSrc;
         img.alt = ad.id;
         el.appendChild(img);
 
@@ -2908,15 +2900,25 @@
     }
 
     function getTimelineAdSize(ad) {
+      const meta = ad && ad.imgSrc ? adImageMetaCache.get(ad.imgSrc) : null;
+      const sourceW = meta && Number.isFinite(meta.w) && meta.w > 0 ? meta.w : GRAPH_AD_FALLBACK_W;
+      const sourceH = meta && Number.isFinite(meta.h) && meta.h > 0 ? meta.h : GRAPH_AD_FALLBACK_H;
+      const scale = TIMELINE_AD_IMG_H / Math.max(1, sourceH);
       return {
-        w: 22,
+        w: Math.max(10, sourceW * scale),
         h: TIMELINE_AD_IMG_H
       };
     }
 
     function primeTimelineAdImageMeta() {
-      // No-op: the timeline should not preload metadata for thousands of images.
-      // Thumbnails are drawn directly at a fixed display size.
+      const pending = state.allAds
+        .map(ad => ensureAdImageMeta(ad.imgSrc))
+        .filter(Boolean);
+      if (!pending.length) return;
+      Promise.all(pending).then(() => {
+        if (state.mode !== "timeline") return;
+        renderTimeline(getFilteredAds());
+      }).catch(() => {});
     }
 
     function renderGraph(filtered) {
@@ -3048,7 +3050,7 @@
             .attr("width", d => d.w)
             .attr("height", d => d.h)
             .attr("preserveAspectRatio", "xMidYMid meet")
-            .attr("href", d => d.payload.thumbSrc || d.payload.imgSrc);
+            .attr("href", d => d.payload.imgSrc);
           adBody.append("rect")
             .attr("class", "graph-ad-hitbox")
             .attr("x", d => -d.w / 2)
@@ -3363,7 +3365,7 @@
     }
 
     function getGraphAdSize(ad) {
-      const meta = ad && (ad.thumbSrc || ad.imgSrc) ? adImageMetaCache.get(ad.thumbSrc || ad.imgSrc) : null;
+      const meta = ad && ad.imgSrc ? adImageMetaCache.get(ad.imgSrc) : null;
       const sourceW = meta && Number.isFinite(meta.w) && meta.w > 0 ? meta.w : GRAPH_AD_FALLBACK_W;
       const sourceH = meta && Number.isFinite(meta.h) && meta.h > 0 ? meta.h : GRAPH_AD_FALLBACK_H;
       const scale = Math.min(GRAPH_AD_MAX_W / sourceW, GRAPH_AD_MAX_H / sourceH);
@@ -3413,7 +3415,7 @@
       );
       if (!ads.length) return;
       const pending = ads
-        .map(ad => ensureAdImageMeta(ad.thumbSrc || ad.imgSrc))
+        .map(ad => ensureAdImageMeta(ad.imgSrc))
         .filter(Boolean);
       if (!pending.length) return;
       const snapshot = {
@@ -3833,7 +3835,7 @@
           const tagClass = tagLen >= 7 ? " tight" : (tagLen >= 5 ? " compact" : "");
           const idLen = (item.ad.id || "").length;
           const idClass = idLen >= 13 ? " tight" : (idLen >= 11 ? " compact" : "");
-          card.innerHTML = "<img loading=\"lazy\" decoding=\"async\" src=\"" + (item.ad.thumbSrc || item.ad.imgSrc) + "\" alt=\"\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\">" + escapeHtml(item.ad.industry) + "</span><span class=\"mini-tag\">" + escapeHtml(item.ad.product) + "</span></div></div></div>";
+          card.innerHTML = "<img src=\"" + item.ad.imgSrc + "\" alt=\"\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\">" + escapeHtml(item.ad.industry) + "</span><span class=\"mini-tag\">" + escapeHtml(item.ad.product) + "</span></div></div></div>";
           card.addEventListener("click", () => openDetailModal(item.ad));
           refs.similarRow.appendChild(card);
         });
