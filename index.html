@@ -569,6 +569,15 @@
       pointer-events: none;
     }
 
+    .ad-point .atlas-thumb {
+      display: block;
+      width: 100%;
+      height: 25px;
+      background-repeat: no-repeat;
+      background-origin: content-box;
+      pointer-events: none;
+    }
+
     .ad-point:hover {
       transform: scale(3.2);
       box-shadow: none;
@@ -2059,8 +2068,10 @@
       "未知": "#cbc6bc"
     };
 
-    const IMAGE_BASE_URL = "https://archive-m-images.oss-cn-hongkong.aliyuncs.com/images/";
-    const THUMB_BASE_URL = "https://archive-m-images.oss-cn-hongkong.aliyuncs.com/thumbs/";
+    const OSS_BASE_URL = "https://archive-m-images.oss-cn-hongkong.aliyuncs.com/";
+    const IMAGE_BASE_URL = OSS_BASE_URL + "images/";
+    const THUMB_BASE_URL = OSS_BASE_URL + "thumbs/";
+    const ATLAS_BASE_URL = OSS_BASE_URL + "atlas/";
 
     const TIMELINE_MIN_SCALE = 0.22;
     const TIMELINE_MAX_SCALE = 4.8;
@@ -2082,6 +2093,7 @@
 
     const state = {
       allAds: [],
+      atlasManifest: null,
       issues: [],
       issueIndexMap: new Map(),
       tagsSelected: new Set(),
@@ -2149,6 +2161,7 @@
       renderTagRail();
       initPanZoomControllers();
       await loadCsv();
+      await loadAtlasManifest();
       buildDataIndexes();
       renderSidebar();
       renderAll();
@@ -2809,11 +2822,8 @@
     function renderAll() {
       const filtered = getFilteredAds();
       updateStats(filtered);
-      if (state.mode === "graph") {
-        renderGraph(filtered);
-      } else {
-        renderTimeline(filtered);
-      }
+      if (state.mode === "timeline") renderTimeline(filtered);
+      else renderGraph(filtered);
     }
 
     function getFilteredAds() {
@@ -2885,12 +2895,23 @@
         el.style.height = adH + "px";
         el.style.borderBottomColor = ad.color;
 
-        const img = document.createElement("img");
-        img.loading = "lazy";
-        img.decoding = "async";
-        img.src = ad.thumbSrc || ad.imgSrc;
-        img.alt = ad.id;
-        el.appendChild(img);
+        const atlasItem = getAtlasItem(ad);
+        if (atlasItem) {
+          const thumb = document.createElement("span");
+          thumb.className = "atlas-thumb";
+          const scale = TIMELINE_AD_IMG_H / Math.max(1, atlasItem.h || TIMELINE_AD_IMG_H);
+          thumb.style.backgroundImage = "url('" + ATLAS_BASE_URL + atlasItem.file + "')";
+          thumb.style.backgroundSize = Math.round((atlasItem.atlasW || 1) * scale) + "px " + Math.round((atlasItem.atlasH || 1) * scale) + "px";
+          thumb.style.backgroundPosition = (-Math.round((atlasItem.x || 0) * scale)) + "px " + (-Math.round((atlasItem.y || 0) * scale)) + "px";
+          el.appendChild(thumb);
+        } else {
+          const img = document.createElement("img");
+          img.loading = "eager";
+          img.decoding = "async";
+          img.src = ad.thumbSrc || ad.imgSrc;
+          img.alt = ad.id;
+          el.appendChild(img);
+        }
 
         el.addEventListener("mouseenter", (e) => showTooltip(e, ad));
         el.addEventListener("mousemove", moveTooltip);
@@ -2908,15 +2929,29 @@
     }
 
     function getTimelineAdSize(ad) {
+      const atlasItem = getAtlasItem(ad);
+      const sourceW = atlasItem && Number.isFinite(atlasItem.w) && atlasItem.w > 0 ? atlasItem.w : GRAPH_AD_FALLBACK_W;
+      const sourceH = atlasItem && Number.isFinite(atlasItem.h) && atlasItem.h > 0 ? atlasItem.h : GRAPH_AD_FALLBACK_H;
+      const scale = TIMELINE_AD_IMG_H / Math.max(1, sourceH);
       return {
-        w: 22,
+        w: Math.max(10, sourceW * scale),
         h: TIMELINE_AD_IMG_H
       };
     }
 
-    function primeTimelineAdImageMeta() {
-      // No-op: the timeline should not preload metadata for thousands of images.
-      // Thumbnails are drawn directly at a fixed display size.
+    function getAtlasItem(ad) {
+      if (!ad || !state.atlasManifest || !state.atlasManifest.items) return null;
+      return state.atlasManifest.items[ad.id] || null;
+    }
+
+    async function loadAtlasManifest() {
+      try {
+        const res = await fetch(ATLAS_BASE_URL + "atlas-manifest.json", { cache: "force-cache" });
+        if (!res.ok) return;
+        state.atlasManifest = await res.json();
+      } catch (err) {
+        state.atlasManifest = null;
+      }
     }
 
     function renderGraph(filtered) {
@@ -3363,9 +3398,11 @@
     }
 
     function getGraphAdSize(ad) {
-      const meta = ad && (ad.thumbSrc || ad.imgSrc) ? adImageMetaCache.get(ad.thumbSrc || ad.imgSrc) : null;
-      const sourceW = meta && Number.isFinite(meta.w) && meta.w > 0 ? meta.w : GRAPH_AD_FALLBACK_W;
-      const sourceH = meta && Number.isFinite(meta.h) && meta.h > 0 ? meta.h : GRAPH_AD_FALLBACK_H;
+      const atlasItem = getAtlasItem(ad);
+      const metaKey = ad && (ad.thumbSrc || ad.imgSrc);
+      const meta = metaKey ? adImageMetaCache.get(metaKey) : null;
+      const sourceW = atlasItem && Number.isFinite(atlasItem.w) && atlasItem.w > 0 ? atlasItem.w : (meta && Number.isFinite(meta.w) && meta.w > 0 ? meta.w : GRAPH_AD_FALLBACK_W);
+      const sourceH = atlasItem && Number.isFinite(atlasItem.h) && atlasItem.h > 0 ? atlasItem.h : (meta && Number.isFinite(meta.h) && meta.h > 0 ? meta.h : GRAPH_AD_FALLBACK_H);
       const scale = Math.min(GRAPH_AD_MAX_W / sourceW, GRAPH_AD_MAX_H / sourceH);
       return {
         w: Math.max(36, Math.round(sourceW * scale)),
@@ -3833,7 +3870,7 @@
           const tagClass = tagLen >= 7 ? " tight" : (tagLen >= 5 ? " compact" : "");
           const idLen = (item.ad.id || "").length;
           const idClass = idLen >= 13 ? " tight" : (idLen >= 11 ? " compact" : "");
-          card.innerHTML = "<img loading=\"lazy\" decoding=\"async\" src=\"" + (item.ad.thumbSrc || item.ad.imgSrc) + "\" alt=\"\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\">" + escapeHtml(item.ad.industry) + "</span><span class=\"mini-tag\">" + escapeHtml(item.ad.product) + "</span></div></div></div>";
+          card.innerHTML = "<img loading=\"lazy\" decoding=\"async\" src=\"" + (item.ad.thumbSrc || item.ad.imgSrc) + "\" alt=\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\">" + escapeHtml(item.ad.industry) + "</span><span class=\"mini-tag\">" + escapeHtml(item.ad.product) + "</span></div></div></div>";
           card.addEventListener("click", () => openDetailModal(item.ad));
           refs.similarRow.appendChild(card);
         });
