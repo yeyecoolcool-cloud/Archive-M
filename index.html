@@ -2640,7 +2640,8 @@
         product,
         color: INDUSTRY_COLORS[industry] || INDUSTRY_COLORS["其他"],
         tagList,
-        imgSrc: "images/" + id + ".png"
+        imgSrc: "images/" + id + ".png",
+        thumbSrc: "thumbs/" + id + ".png"
       };
     }
 
@@ -2805,8 +2806,11 @@
     function renderAll() {
       const filtered = getFilteredAds();
       updateStats(filtered);
-      renderTimeline(filtered);
-      renderGraph(filtered);
+      if (state.mode === "graph") {
+        renderGraph(filtered);
+      } else {
+        renderTimeline(filtered);
+      }
     }
 
     function getFilteredAds() {
@@ -2880,8 +2884,10 @@
         el.style.borderBottomColor = ad.color;
 
         const img = document.createElement("img");
-        img.src = ad.imgSrc;
+        img.src = ad.thumbSrc || ad.imgSrc;
         img.alt = ad.id;
+        img.loading = "eager";
+        img.decoding = "async";
         el.appendChild(img);
 
         el.addEventListener("mouseenter", (e) => showTooltip(e, ad));
@@ -2900,7 +2906,8 @@
     }
 
     function getTimelineAdSize(ad) {
-      const meta = ad && ad.imgSrc ? adImageMetaCache.get(ad.imgSrc) : null;
+      const metaKey = ad && (ad.thumbSrc || ad.imgSrc);
+      const meta = metaKey ? adImageMetaCache.get(metaKey) : null;
       const sourceW = meta && Number.isFinite(meta.w) && meta.w > 0 ? meta.w : GRAPH_AD_FALLBACK_W;
       const sourceH = meta && Number.isFinite(meta.h) && meta.h > 0 ? meta.h : GRAPH_AD_FALLBACK_H;
       const scale = TIMELINE_AD_IMG_H / Math.max(1, sourceH);
@@ -2912,7 +2919,7 @@
 
     function primeTimelineAdImageMeta() {
       const pending = state.allAds
-        .map(ad => ensureAdImageMeta(ad.imgSrc))
+        .map(ad => ensureAdImageMeta(ad.thumbSrc || ad.imgSrc))
         .filter(Boolean);
       if (!pending.length) return;
       Promise.all(pending).then(() => {
@@ -3835,7 +3842,7 @@
           const tagClass = tagLen >= 7 ? " tight" : (tagLen >= 5 ? " compact" : "");
           const idLen = (item.ad.id || "").length;
           const idClass = idLen >= 13 ? " tight" : (idLen >= 11 ? " compact" : "");
-          card.innerHTML = "<img src=\"" + item.ad.imgSrc + "\" alt=\"\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\">" + escapeHtml(item.ad.industry) + "</span><span class=\"mini-tag\">" + escapeHtml(item.ad.product) + "</span></div></div></div>";
+          card.innerHTML = "<img src=\"" + (item.ad.thumbSrc || item.ad.imgSrc) + "\" alt=\"\" loading=\"lazy\" decoding=\"async\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\">" + escapeHtml(item.ad.industry) + "</span><span class=\"mini-tag\">" + escapeHtml(item.ad.product) + "</span></div></div></div>";
           card.addEventListener("click", () => openDetailModal(item.ad));
           refs.similarRow.appendChild(card);
         });
