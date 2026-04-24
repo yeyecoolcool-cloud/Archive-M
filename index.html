@@ -2059,6 +2059,8 @@
       "未知": "#cbc6bc"
     };
 
+    const IMAGE_BASE_URL = "https://archive-m-images.oss-cn-hongkong.aliyuncs.com/images/";
+
     const TIMELINE_MIN_SCALE = 0.22;
     const TIMELINE_MAX_SCALE = 4.8;
     const TIMELINE_SIDE_MARGIN = 18;
@@ -2640,7 +2642,7 @@
         product,
         color: INDUSTRY_COLORS[industry] || INDUSTRY_COLORS["其他"],
         tagList,
-        imgSrc: "images/" + id + ".png"
+        imgSrc: IMAGE_BASE_URL + id + ".png"
       };
     }
 
