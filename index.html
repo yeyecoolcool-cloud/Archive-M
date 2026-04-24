@@ -1994,7 +1994,7 @@
   <div class="modal" id="detailModal">
     <div class="modal-card">
       <div class="modal-left">
-        <img id="detailImg" alt="广告图">
+        <img id="detailImg" alt="广告图" loading="lazy" decoding="async">
       </div>
       <div class="modal-right">
         <div class="modal-head">
@@ -2060,8 +2060,6 @@
     };
 
     const IMAGE_BASE_URL = "https://archive-m-images.oss-cn-hongkong.aliyuncs.com/images/";
-    const TIMELINE_IMAGE_PRELOAD_MARGIN = 900;
-    let timelineImageUpdateFrame = null;
 
     const TIMELINE_MIN_SCALE = 0.22;
     const TIMELINE_MAX_SCALE = 4.8;
@@ -2889,18 +2887,12 @@
         el.style.borderBottomColor = ad.color;
 
         el.dataset.imgSrc = ad.imgSrc;
+        el.dataset.alt = ad.id;
         el.dataset.worldX = String(x);
         el.dataset.worldY = String(y);
         el.dataset.worldW = String(adSize.w);
         el.dataset.worldH = String(adH);
-
-        const img = document.createElement("img");
-        img.alt = ad.id;
-        img.loading = "lazy";
-        img.decoding = "async";
-        img.fetchPriority = "low";
-        img.dataset.src = ad.imgSrc;
-        el.appendChild(img);
+        el.classList.add("img-deferred");
 
         el.addEventListener("mouseenter", (e) => showTooltip(e, ad));
         el.addEventListener("mousemove", moveTooltip);
@@ -2915,43 +2907,63 @@
       });
 
       applyCamera("timeline");
-      scheduleTimelineVisibleImageUpdate();
     }
+
+    let timelineVisibleImageRaf = null;
 
     function scheduleTimelineVisibleImageUpdate() {
       if (state.mode !== "timeline") return;
-      if (timelineImageUpdateFrame) cancelAnimationFrame(timelineImageUpdateFrame);
-      timelineImageUpdateFrame = requestAnimationFrame(() => {
-        timelineImageUpdateFrame = null;
+      if (timelineVisibleImageRaf) return;
+      timelineVisibleImageRaf = requestAnimationFrame(() => {
+        timelineVisibleImageRaf = null;
         updateTimelineVisibleImages();
       });
     }
 
     function updateTimelineVisibleImages() {
-      const layout = state.timelineLayout;
-      if (!layout) return;
+      if (state.mode !== "timeline" || !state.timelineLayout) return;
       const cam = state.cameras.timeline;
-      const viewW = Math.max(1, refs.timelineContainer.clientWidth);
-      const viewH = Math.max(1, refs.timelineContainer.clientHeight);
-      const margin = TIMELINE_IMAGE_PRELOAD_MARGIN;
-      refs.timelineStage.querySelectorAll(".ad-point img").forEach(img => {
-        const el = img.parentElement;
-        if (!el) return;
-        const worldX = Number(el.dataset.worldX || 0);
-        const worldY = Number(el.dataset.worldY || 0);
-        const worldW = Number(el.dataset.worldW || 0);
-        const worldH = Number(el.dataset.worldH || 0);
-        const sx1 = cam.x + worldX * cam.scale;
-        const sy1 = cam.y + worldY * cam.scale;
-        const sx2 = sx1 + worldW * cam.scale;
-        const sy2 = sy1 + worldH * cam.scale;
-        const visible =
-          sx2 >= -margin &&
-          sx1 <= viewW + margin &&
-          sy2 >= -margin &&
-          sy1 <= viewH + margin;
-        if (visible && !img.src) {
-          img.src = img.dataset.src || "";
+      const viewport = refs.timelineContainer;
+      const viewW = Math.max(1, viewport.clientWidth);
+      const viewH = Math.max(1, viewport.clientHeight - state.timelineLayout.axisOverlayH);
+
+      const shouldShowImages = cam.scale >= 0.48;
+      const bufferX = 260 / Math.max(0.1, cam.scale);
+      const bufferY = 180 / Math.max(0.1, cam.scale);
+      const minX = (-cam.x) / cam.scale - bufferX;
+      const maxX = (viewW - cam.x) / cam.scale + bufferX;
+      const minY = (-cam.y) / cam.scale - bufferY;
+      const maxY = (viewH - cam.y) / cam.scale + bufferY;
+
+      const points = Array.from(refs.timelineStage.querySelectorAll(".ad-point"));
+      let loadedCount = 0;
+      const maxImages = cam.scale < 0.8 ? 120 : 260;
+
+      points.forEach((el) => {
+        const x = parseFloat(el.dataset.worldX || "0");
+        const y = parseFloat(el.dataset.worldY || "0");
+        const w = parseFloat(el.dataset.worldW || "0");
+        const h = parseFloat(el.dataset.worldH || "0");
+        const visible = shouldShowImages &&
+          x + w >= minX && x <= maxX && y + h >= minY && y <= maxY &&
+          loadedCount < maxImages &&
+          !el.classList.contains("dimmed");
+
+        if (visible) {
+          loadedCount += 1;
+          if (!el.querySelector("img")) {
+            const img = document.createElement("img");
+            img.src = el.dataset.imgSrc || "";
+            img.alt = el.dataset.alt || "";
+            img.loading = "lazy";
+            img.decoding = "async";
+            el.appendChild(img);
+            el.classList.remove("img-deferred");
+          }
+        } else {
+          const img = el.querySelector("img");
+          if (img) img.remove();
+          el.classList.add("img-deferred");
         }
       });
     }
@@ -2968,9 +2980,14 @@
     }
 
     function primeTimelineAdImageMeta() {
-      // Disabled for performance: preloading metadata for thousands of timeline images
-      // caused the browser to request nearly the whole archive at startup.
-      return;
+      const pending = state.allAds
+        .map(ad => ensureAdImageMeta(ad.imgSrc))
+        .filter(Boolean);
+      if (!pending.length) return;
+      Promise.all(pending).then(() => {
+        if (state.mode !== "timeline") return;
+        renderTimeline(getFilteredAds());
+      }).catch(() => {});
     }
 
     function renderGraph(filtered) {
@@ -3493,8 +3510,6 @@
       }
       const promise = new Promise((resolve) => {
         const img = new Image();
-        img.decoding = "async";
-        img.fetchPriority = "low";
         img.onload = () => {
           adImageMetaCache.set(imgSrc, {
             status: "loaded",
@@ -3858,8 +3873,6 @@
 
     function openDetailModal(ad) {
       state.detailAd = ad;
-      refs.detailImg.loading = "eager";
-      refs.detailImg.decoding = "async";
       refs.detailImg.src = ad.imgSrc;
       refs.detailTitle.textContent = ad.id;
       refs.detailMeta.textContent = ad.year + " 年 / 第 " + ad.issue + " 期 / " + ad.industry + " / " + ad.product;
