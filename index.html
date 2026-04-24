@@ -2060,6 +2060,8 @@
     };
 
     const IMAGE_BASE_URL = "https://archive-m-images.oss-cn-hongkong.aliyuncs.com/images/";
+    const TIMELINE_IMAGE_PRELOAD_MARGIN = 900;
+    let timelineImageUpdateFrame = null;
 
     const TIMELINE_MIN_SCALE = 0.22;
     const TIMELINE_MAX_SCALE = 4.8;
@@ -2387,7 +2389,10 @@
           refs.graphSvg.style.transform = tf;
         }
       }
-      if (modeKey === "timeline") renderTimelineAxis();
+      if (modeKey === "timeline") {
+        renderTimelineAxis();
+        scheduleTimelineVisibleImageUpdate();
+      }
     }
 
     function clamp(v, lo, hi) {
@@ -2807,8 +2812,11 @@
     function renderAll() {
       const filtered = getFilteredAds();
       updateStats(filtered);
-      renderTimeline(filtered);
-      renderGraph(filtered);
+      if (state.mode === "timeline") {
+        renderTimeline(filtered);
+      } else if (state.mode === "graph") {
+        renderGraph(filtered);
+      }
     }
 
     function getFilteredAds() {
@@ -2834,7 +2842,6 @@
     function renderTimeline(filtered) {
       const stage = refs.timelineStage;
       stage.innerHTML = "";
-      primeTimelineAdImageMeta();
       const gapX = 34;
       const leftPad = 74;
       const topPad = 24;
@@ -2881,9 +2888,18 @@
         el.style.height = adH + "px";
         el.style.borderBottomColor = ad.color;
 
+        el.dataset.imgSrc = ad.imgSrc;
+        el.dataset.worldX = String(x);
+        el.dataset.worldY = String(y);
+        el.dataset.worldW = String(adSize.w);
+        el.dataset.worldH = String(adH);
+
         const img = document.createElement("img");
-        img.src = ad.imgSrc;
         img.alt = ad.id;
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.fetchPriority = "low";
+        img.dataset.src = ad.imgSrc;
         el.appendChild(img);
 
         el.addEventListener("mouseenter", (e) => showTooltip(e, ad));
@@ -2899,6 +2915,45 @@
       });
 
       applyCamera("timeline");
+      scheduleTimelineVisibleImageUpdate();
+    }
+
+    function scheduleTimelineVisibleImageUpdate() {
+      if (state.mode !== "timeline") return;
+      if (timelineImageUpdateFrame) cancelAnimationFrame(timelineImageUpdateFrame);
+      timelineImageUpdateFrame = requestAnimationFrame(() => {
+        timelineImageUpdateFrame = null;
+        updateTimelineVisibleImages();
+      });
+    }
+
+    function updateTimelineVisibleImages() {
+      const layout = state.timelineLayout;
+      if (!layout) return;
+      const cam = state.cameras.timeline;
+      const viewW = Math.max(1, refs.timelineContainer.clientWidth);
+      const viewH = Math.max(1, refs.timelineContainer.clientHeight);
+      const margin = TIMELINE_IMAGE_PRELOAD_MARGIN;
+      refs.timelineStage.querySelectorAll(".ad-point img").forEach(img => {
+        const el = img.parentElement;
+        if (!el) return;
+        const worldX = Number(el.dataset.worldX || 0);
+        const worldY = Number(el.dataset.worldY || 0);
+        const worldW = Number(el.dataset.worldW || 0);
+        const worldH = Number(el.dataset.worldH || 0);
+        const sx1 = cam.x + worldX * cam.scale;
+        const sy1 = cam.y + worldY * cam.scale;
+        const sx2 = sx1 + worldW * cam.scale;
+        const sy2 = sy1 + worldH * cam.scale;
+        const visible =
+          sx2 >= -margin &&
+          sx1 <= viewW + margin &&
+          sy2 >= -margin &&
+          sy1 <= viewH + margin;
+        if (visible && !img.src) {
+          img.src = img.dataset.src || "";
+        }
+      });
     }
 
     function getTimelineAdSize(ad) {
@@ -2913,14 +2968,9 @@
     }
 
     function primeTimelineAdImageMeta() {
-      const pending = state.allAds
-        .map(ad => ensureAdImageMeta(ad.imgSrc))
-        .filter(Boolean);
-      if (!pending.length) return;
-      Promise.all(pending).then(() => {
-        if (state.mode !== "timeline") return;
-        renderTimeline(getFilteredAds());
-      }).catch(() => {});
+      // Disabled for performance: preloading metadata for thousands of timeline images
+      // caused the browser to request nearly the whole archive at startup.
+      return;
     }
 
     function renderGraph(filtered) {
@@ -3443,6 +3493,8 @@
       }
       const promise = new Promise((resolve) => {
         const img = new Image();
+        img.decoding = "async";
+        img.fetchPriority = "low";
         img.onload = () => {
           adImageMetaCache.set(imgSrc, {
             status: "loaded",
@@ -3806,6 +3858,8 @@
 
     function openDetailModal(ad) {
       state.detailAd = ad;
+      refs.detailImg.loading = "eager";
+      refs.detailImg.decoding = "async";
       refs.detailImg.src = ad.imgSrc;
       refs.detailTitle.textContent = ad.id;
       refs.detailMeta.textContent = ad.year + " 年 / 第 " + ad.issue + " 期 / " + ad.industry + " / " + ad.product;
@@ -3837,7 +3891,7 @@
           const tagClass = tagLen >= 7 ? " tight" : (tagLen >= 5 ? " compact" : "");
           const idLen = (item.ad.id || "").length;
           const idClass = idLen >= 13 ? " tight" : (idLen >= 11 ? " compact" : "");
-          card.innerHTML = "<img src=\"" + item.ad.imgSrc + "\" alt=\"\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\">" + escapeHtml(item.ad.industry) + "</span><span class=\"mini-tag\">" + escapeHtml(item.ad.product) + "</span></div></div></div>";
+          card.innerHTML = "<img loading=\"lazy\" decoding=\"async\" src=\"" + item.ad.imgSrc + "\" alt=\"\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\">" + escapeHtml(item.ad.industry) + "</span><span class=\"mini-tag\">" + escapeHtml(item.ad.product) + "</span></div></div></div>";
           card.addEventListener("click", () => openDetailModal(item.ad));
           refs.similarRow.appendChild(card);
         });
