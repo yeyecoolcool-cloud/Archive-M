@@ -15,23 +15,425 @@ const TAG_GROUPS = [
   { key: "global", label: "全球符号", codes: ["Da", "Db", "Dc"] },
   { key: "social", label: "社会现代性", codes: ["Ea1", "Ea2", "Ea3"] }
 ];
+
+const UI_TEXT = {
+  zh: {
+    brandSub: "机联会刊广告数字化平台",
+    clearTags: "清空维度",
+    reset: "重置",
+    view: "视图",
+    timelineMode: "总览模式",
+    graphMode: "图谱模式",
+    visualPanel: "数量模式",
+    back: "返回上一层",
+    timeAxis: "时间轴",
+    industryAxis: "行业轴",
+    axisShare: "行业→特征",
+    tagShare: "特征→行业",
+    axisShareLong: "行业→特征 P(特征|行业)",
+    tagShareLong: "特征→行业 P(行业|特征)",
+    less: "少",
+    more: "多",
+    industryProductFilter: "行业 / 产品筛选",
+    analysisPanel: "分析面板",
+    collapse: "收起",
+    expand: "展开",
+    matchedAds: "匹配广告",
+    coveredIssues: "覆盖刊期",
+    industryCount: "行业数",
+    productCount: "产品数",
+    timeSpan: "时间跨度",
+    industryDashboard: "行业数量看板",
+    topFeatures: "高频维度",
+    featureCodes: "维度编码",
+    featureExplain: "特征解释",
+    similarAds: "相似广告",
+    locateInGraph: "在图谱中定位",
+    locateInTimeline: "在时间轴中定位",
+    noData: "无数据",
+    noCurve: "当前筛选下暂无行业曲线",
+    noFeature: "暂无维度",
+    noFeatureTag: "无维度标签",
+    noSimilar: "未找到相似广告",
+    allAds: "全部广告",
+    graphLevel: "图谱层级",
+    noResult: "无结果",
+    industry: "行业",
+    product: "产品",
+    issue: "刊期",
+    ad: "广告",
+    year: "年",
+    issuePrefix: "第",
+    issueSuffix: "期",
+    graphPath: "图谱路径",
+    itemUnit: "条",
+    count: "数量",
+    filterPanelAria: "替换行业面板",
+    all: "全部"
+  },
+  en: {
+    brandSub: "Digital Advertising Platform of China Machine Federation Journal",
+    clearTags: "Clear",
+    reset: "Reset",
+    view: "View",
+    timelineMode: "Overview Mode",
+    graphMode: "Graph Mode",
+    visualPanel: "Count Mode",
+    back: "Back",
+    timeAxis: "Timeline",
+    industryAxis: "Industry Axis",
+    axisShare: "Industry→Feature",
+    tagShare: "Feature→Industry",
+    axisShareLong: "Industry→Feature P(feature|industry)",
+    tagShareLong: "Feature→Industry P(industry|feature)",
+    less: "Low",
+    more: "High",
+    industryProductFilter: "Industry / Product Filter",
+    analysisPanel: "Analysis",
+    collapse: "Collapse",
+    expand: "Expand",
+    matchedAds: "Matched Ads",
+    coveredIssues: "Issues",
+    industryCount: "Industries",
+    productCount: "Products",
+    timeSpan: "Time Span",
+    industryDashboard: "Industry Count Dashboard",
+    topFeatures: "Top Features",
+    featureCodes: "Feature Codes",
+    featureExplain: "Feature Note",
+    similarAds: "Similar Ads",
+    locateInGraph: "Locate in Graph",
+    locateInTimeline: "Locate in Timeline",
+    noData: "No Data",
+    noCurve: "No industry curves for this filter",
+    noFeature: "No Features",
+    noFeatureTag: "No Feature Tags",
+    noSimilar: "No Similar Ads",
+    allAds: "All Ads",
+    graphLevel: "Graph Level",
+    noResult: "No Result",
+    industry: "Industry",
+    product: "Product",
+    issue: "Issue",
+    ad: "Ad",
+    year: "",
+    issuePrefix: "Issue ",
+    issueSuffix: "",
+    graphPath: "Graph Path",
+    itemUnit: "ads",
+    count: "Count",
+    filterPanelAria: "Replace industry panel",
+    all: "All"
+  }
+};
+
+const TAG_LABELS_EN = {
+  Aa1: "Calligraphy", Aa2: "Song Typeface", Aa3: "Sans Serif", Aa4: "Decorative Type",
+  Ab1: "Vertical Text", Ab2: "Horizontal Text", Ab3: "Mixed Layout",
+  Ac1: "Realistic", Ac2: "Stylized", Ad1: "Illustration", Ad2: "Photography",
+  Ba1: "Traditional Female", Ba2: "New Woman", Bb1: "Traditional Male", Bb2: "New Man",
+  Ca1: "Scientific Terms", Ca2: "Scientific Evidence", Cb1: "Brand Name", Cb2: "Trademark Symbol", Cb3: "Registered Mark", Cb4: "Neologism / Pun",
+  Da: "Scene", Db: "Language", Dc: "Geography",
+  Ea1: "Commercial", Ea2: "Popular Science", Ea3: "Patriotic"
+};
+
+const TAG_GROUP_LABELS_EN = {
+  visual: "Visual Form",
+  identity: "Identity & Gender",
+  text: "Text & Discourse",
+  global: "Global Symbols",
+  social: "Social Modernity"
+};
+
+const INDUSTRY_LABELS_EN = {
+  "纺织": "Textiles",
+  "日化": "Daily Chemicals",
+  "橡胶": "Rubber",
+  "医药": "Medicine",
+  "食品": "Food",
+  "电器": "Electrical",
+  "塑料": "Plastics",
+  "搪瓷": "Enamelware",
+  "油漆": "Paint",
+  "纸业": "Paper",
+  "化工": "Chemicals",
+  "钢铁": "Steel",
+  "火柴": "Matches",
+  "其他": "Other",
+  "未知": "Unknown"
+};
+
+const PRODUCT_LABELS_EN = {
+  "布料": "Fabric",
+  "衣物": "Clothing",
+  "鞋子": "Shoes",
+  "套鞋": "Overshoes",
+  "肥皂": "Soap",
+  "袜子": "Socks",
+  "牙刷": "Toothbrush",
+  "化妆品": "Cosmetics",
+  "毛巾": "Towel",
+  "牙膏": "Toothpaste",
+  "雪花膏": "Vanishing Cream",
+  "味精": "MSG",
+  "电灯泡": "Light Bulb",
+  "帽子": "Hat",
+  "人造自来血": "Artificial Blood Tonic",
+  "烟咀": "Cigarette Holder",
+  "唱片": "Records",
+  "筷子": "Chopsticks",
+  "饼干": "Biscuits",
+  "蚊香": "Mosquito Coil",
+  "床上用品": "Bedding",
+  "轮胎": "Tires",
+  "女界宝": "Nujiebao",
+  "绒毯": "Blanket",
+  "电风扇": "Electric Fan",
+  "手帕": "Handkerchief",
+  "亚林臭药水": "Yalin Deodorant",
+  "饮料": "Beverage",
+  "器皿": "Vessels",
+  "中国银行": "Bank of China",
+  "钢笔": "Fountain Pen",
+  "宽紧带": "Elastic Band",
+  "鱼肝油": "Cod Liver Oil",
+  "化学应用玻璃器": "Chemical Glassware",
+  "玩具": "Toys",
+  "鲜味晶": "Seasoning Crystals",
+  "床": "Bed",
+  "国货": "National Goods",
+  "热水瓶": "Thermos",
+  "日用品": "Daily Goods",
+  "调料": "Condiments",
+  "面霜": "Face Cream",
+  "油漆": "Paint",
+  "月月红": "Yueyuehong",
+  "纽扣": "Buttons",
+  "橡皮球": "Rubber Ball",
+  "油墨": "Ink",
+  "自由霜": "Ziyou Cream",
+  "糖": "Candy",
+  "补使命": "Bushiming",
+  "窗帘": "Curtains",
+  "电光": "Electric Light",
+  "电木": "Bakelite",
+  "化学玻璃": "Chemical Glass",
+  "良丹": "Liangdan",
+  "汽水": "Soda",
+  "图章盒": "Seal Box",
+  "未知": "Unknown",
+  "墨汁": "Ink",
+  "时钟": "Clock",
+  "鞋套": "Shoe Covers",
+  "皂粉": "Soap Powder",
+  "海波药": "Hypo Solution",
+  "火柴": "Matches",
+  "面盆": "Wash Basin",
+  "手套": "Gloves",
+  "丝巾": "Silk Scarf",
+  "香粉": "Face Powder",
+  "新华银行": "Xinhua Bank",
+  "牙粉": "Tooth Powder",
+  "颜料": "Pigment",
+  "照相卡纸": "Photographic Card Paper",
+  "笔": "Pen",
+  "钢精器皿": "Aluminum Ware",
+  "红铅丹": "Red Lead",
+  "化学原料": "Chemical Materials",
+  "火车杯": "Train Cup",
+  "罗帐": "Canopy Net",
+  "手电筒": "Flashlight",
+  "爽身粉": "Talcum Powder",
+  "胃灵": "Weiling",
+  "橡胶品": "Rubber Goods",
+  "亚林沙而": "Yalin Shaer",
+  "樟脑丸": "Mothballs",
+  "真马宝": "Zhenmabao",
+  "助肺呼吸香胶": "Respiratory Gum",
+  "儿童用品": "Children's Goods",
+  "红丹": "Red Lead",
+  "机联会刊": "The Young Companion",
+  "灭火器": "Fire Extinguisher",
+  "木箱": "Wooden Box",
+  "皮带": "Belt",
+  "熔铜罐": "Copper Melting Pot",
+  "五彩花铁盒": "Decorated Tin Box",
+  "浴巾": "Bath Towel",
+  "玻璃杯": "Glass Cup",
+  "插锁": "Plug Lock",
+  "电池": "Battery",
+  "番茄酱": "Tomato Sauce",
+  "风琴": "Organ",
+  "骨痛精": "Bone Pain Remedy",
+  "黄丹": "Yellow Lead",
+  "镜子": "Mirror",
+  "礼券": "Gift Voucher",
+  "硫酸": "Sulfuric Acid",
+  "皮球": "Ball",
+  "汽灯": "Gas Lamp",
+  "铅笔": "Pencil",
+  "热水袋": "Hot Water Bag",
+  "伞": "Umbrella",
+  "速印机": "Duplicator",
+  "太乙麦精粉": "Taiyi Malt Powder",
+  "铁丝网篱": "Wire Mesh Fence",
+  "鲜果子露": "Fruit Syrup",
+  "香烟": "Cigarettes",
+  "消防器": "Firefighting Equipment",
+  "鞋带": "Shoelaces",
+  "眼镜": "Glasses",
+  "雨衣": "Raincoat",
+  "百用绳": "Utility Rope",
+  "薄荷脑": "Menthol",
+  "薄荷油": "Peppermint Oil",
+  "冰淇淋": "Ice Cream",
+  "茶杯": "Tea Cup",
+  "嫦娥粉": "Chang'e Powder",
+  "催眠术": "Hypnotism",
+  "当归素": "Angelica Extract",
+  "地毯": "Carpet",
+  "电灯": "Electric Lamp",
+  "电话订购": "Telephone Orders",
+  "二天油": "Ertian Oil",
+  "发夹": "Hair Clip",
+  "发网": "Hair Net",
+  "凤尾鱼罐头": "Canned Anchovies",
+  "钢精": "Aluminum",
+  "钢丝": "Steel Wire",
+  "工艺制品": "Craft Goods",
+  "公益广告": "Public Service Ad",
+  "海藻晶": "Seaweed Crystals",
+  "红黄铜皮": "Red and Yellow Brass Sheet",
+  "花边": "Lace",
+  "黄包车": "Rickshaw",
+  "黄铜皮": "Brass Sheet",
+  "火炉": "Stove",
+  "火腿": "Ham",
+  "火油炉": "Kerosene Stove",
+  "戒烟药": "Anti-smoking Medicine",
+  "酒精": "Alcohol",
+  "蜡纸": "Wax Paper",
+  "龙井茶": "Longjing Tea",
+  "麦精茶": "Malt Drink",
+  "麦精粉": "Malt Powder",
+  "奶粉": "Milk Powder",
+  "年糕": "Rice Cake",
+  "牛奶": "Milk",
+  "皮包": "Leather Bag",
+  "皮件": "Leather Goods",
+  "乒乓球": "Table Tennis",
+  "上海纺织印染公司": "Shanghai Textile Printing and Dyeing Co.",
+  "上海商业银行": "Shanghai Commercial Bank",
+  "肾气丸": "Shenqi Pills",
+  "十滴水": "Ten Drops",
+  "食品公司": "Food Company",
+  "手挽袋": "Handbag",
+  "双鹦鹉牌": "Double Parrot Brand",
+  "水果罐头": "Canned Fruit",
+  "藤柳儿椅": "Rattan Chair",
+  "痛必灵": "Tongbiling",
+  "退色灵": "Color Remover",
+  "万年历": "Perpetual Calendar",
+  "围巾": "Scarf",
+  "五金": "Hardware",
+  "喜果": "Wedding Sweets",
+  "喜果盒": "Wedding Sweet Box",
+  "香水": "Perfume",
+  "香烟缸": "Ashtray",
+  "香油": "Sesame Oil",
+  "信纸": "Writing Paper",
+  "眼药": "Eye Medicine",
+  "洋钉": "Wire Nails",
+  "药品": "Medicine",
+  "一文钱": "Yiwenqian",
+  "椅子": "Chair",
+  "油膏": "Ointment",
+  "月饼": "Mooncake",
+  "赠券": "Coupon",
+  "帐薄表单": "Account Books and Forms",
+  "中国医学大成": "Chinese Medical Compendium",
+  "钟表": "Clock and Watch",
+  "竹套": "Bamboo Cover",
+  "滋味素": "Ziweisu",
+  "棕绷套": "Palm-fiber Bed Cover"
+};
+
+const FEATURE_DESCRIPTIONS_EN = {
+  Aa1: "Draws on local writing traditions and preserves brush movement, giving the layout a strong traditional character.",
+  Aa2: "A printed serif type style with thick verticals and thin horizontals, common in early printed body text.",
+  Aa3: "Even strokes with no terminal decoration, conveying industrial order and modern graphic clarity.",
+  Aa4: "Characters are stretched, reshaped, hollowed, shadowed, or otherwise decorated for visual effect.",
+  Ab1: "Text is arranged vertically from top to bottom.",
+  Ab2: "Text is arranged horizontally from left to right.",
+  Ab3: "Vertical and horizontal arrangements appear together in the same advertisement.",
+  Ac1: "Depicts recognizable objects, people, scenes, or products with concrete detail and everyday visual realism.",
+  Ac2: "Uses simplification, exaggeration, geometry, symbolism, or deformation rather than realistic depiction.",
+  Ad1: "The main visual content is hand drawn through line, tone, color, or other illustration techniques.",
+  Ad2: "The main visual content is photographic, often with grayscale texture and realistic scenes or portraits.",
+  Ba1: "Represents women through traditional family roles such as mother, wife, or domestic caretaker.",
+  Ba2: "Represents modern women such as students, stars, professionals, or social figures in public life.",
+  Bb1: "Represents men through traditional roles, dress, family hierarchy, or older social etiquette.",
+  Bb2: "Represents modern men such as professionals, entrepreneurs, students, or progressive youth.",
+  Ca1: "Uses scientific or technical terms such as vitamins, therapy, mechanisms, or non-irritating formulas.",
+  Ca2: "Presents data, charts, patent numbers, experiments, reports, or other evidential claims.",
+  Cb1: "The product is identified through an explicit brand name, often in the form of a named label or mark.",
+  Cb2: "Uses a graphic trademark, often near words such as trademark or registered trademark.",
+  Cb3: "Explicitly marks the advertisement or product as registered.",
+  Cb4: "Uses invented terms, homophones, puns, or witty phrasing to create memorable meaning.",
+  Da: "Shows modern urban scenes such as high-rise buildings, vehicles, trams, or Western-style architecture.",
+  Db: "Contains foreign-language text, most often English.",
+  Dc: "References Shanghai, concessions, Western countries, or other global and modern geographic markers.",
+  Ea1: "Primarily promotes a product through commercial persuasion, storytelling, or comparison.",
+  Ea2: "Connects the advertisement to public health, modern lifestyle guidance, or cultural education.",
+  Ea3: "Contains explicit national crisis awareness or social mobilization, beyond generic national-goods slogans."
+};
 const TAG_DEF_MAP = new Map(TAG_DEFS.map(tag => [tag.code, tag]));
+const VISUAL_TAGS = TAG_DEFS;
+const FEATURE_DESCRIPTIONS = {
+  Aa1: "源于本土书写传统，涵盖楷、隶、行、草等多种书体类别。其形态保留了毛笔书写中提按顿挫的运笔规律与有机连贯的笔触，在版面视觉上传递出显著的传统感",
+  Aa2: "源自早期雕版与铅印技术，以横细竖粗的线条对比及笔画末端带有衬线装饰为客观判定依据，构成了当时常规的印刷正文体系",
+  Aa3: "线条等粗、去除末端装饰，体现了工业化设计的秩序感",
+  Aa4: "对字形骨架进行几何拉伸与变形设计，或运用镂空、阴影等特效装饰",
+  Ab1: "文字由上而下排列",
+  Ab2: "文字各个左右并排",
+  Ab3: "文字由上而下排列和文字各个左右并排混用",
+  Ac1: "描绘具体可辨识的物象（如人物、风景、器物），一定的细节且清晰（如人物五官、服饰纹理、建筑结构）；符合日常视觉经验（符合透视、比例等写实技法）；通常承担叙事、宣传或纪实功能",
+  Ac2: "脱离对现实物象的精确摹写，无具体细节，不能体现结构走向；不符合真实存在的事物；不符合日常视觉经验（透视、比例等），可能通过简化、变形、夸张、比喻、拟人、几何化或符号化手法表现，强调形式象征意义；几何化构图（如圆形、线条的秩序组合）；形象高度简化（如商标、图案装饰）；受西方现代艺术（如立体派、未来派）影响的变形手法",
+  Ad1: "广告画面中的人物、场景、商品等所有视觉内容，均由画师运用线条、色彩、明暗等绘画技法手工创作完成",
+  Ad2: "主要图像内容为摄影照片，往往是深色或者有灰蒙蒙的感觉，内容是人像和真实的空间场景",
+  Ba1: "传统家庭角色（慈母、贤妻）她们的价值主要体现在家庭内部，是家族门风、教养的体现，她的声誉与家族的声誉紧密捆绑。服饰装扮往往为普通棉服、传统旗袍、无特别妆发、布鞋等，或者场景中正在做的事为做家务、交代家事、带孩子等",
+  Ba2: "新女性（影星、女学生、职业女性、社交名媛），她们的核心是个人主义、独立自主和公共参与，追求教育、职业、爱情和社会的平等权利。服饰装扮往往为新式服装、新式旗袍、高跟鞋、时髦配饰、卷发等，或者场景正在做的事为休闲娱乐、活跃在公开场合",
+  Bb1: "传统士绅、家长、小孩（家族的“香火继承者”和“未来士绅”）；核心是家族与伦理，固守传统礼制。服饰装扮往往为长袍马褂、瓜皮帽、布鞋、长辫等",
+  Bb2: "现代企业家、专业人士、进步青年、小孩。核心是在公共领域创造价值，致力于国家富强与个人发展。服饰装扮往往为西装、中山装、学生装、大衣、皮鞋等",
+  Ca1: "出现较为科学性的术语，如“不受刺激”“电疗”、“维他命”、“科学机制”等",
+  Ca2: "有数据、图表、专利号、实验报告等",
+  Cb1: "一般以 xx 牌的形式作为品牌名称",
+  Cb2: "通常有圆形图框，大多情况下旁边会有“商标”、“注册商标”字样，有时也会同时出现多个商标图形。民国商标不都是圆形的，圆形只是当时很常见的一种款式，还有多种其他形状被广泛使用，几何形状、异形/具象形状、组合形状",
+  Cb3: "一般“注册商标”是标注在商标图像附近，或者单独位置标注出来",
+  Cb4: "词组为新创或与某字读音相近，以达到诙谐、委婉、寓意深刻或双关的表达效果",
+  Da: "出现摩天大楼、现代交通工具（汽车、电车）、西式建筑等都市景观",
+  Db: "出现外文，大多为英文",
+  Dc: "有相关图案或图像描绘上海、租界、欧美国家等现代化或全球化地标",
+  Ea1: "纯商业推销，如通过讲故事、比喻等方法",
+  Ea2: "介入具有普适意义的公共卫生指导、现代生活规范普及或文化启蒙",
+  Ea3: "文本包含明确的民族危机感与政治社会动员诉求（如详细论述“抵制漏卮”、“实业救国”等），仅附带“国货之光”等空泛口号的样本不予计入"
+};
 
 const INDUSTRY_COLORS = {
-  "纺织": "#ccb1de",
-  "日化": "#a7ecb0",
-  "橡胶": "#9bc9ae",
-  "医药": "#efe7b9",
-  "食品": "#ffc39b",
-  "电器": "#d680ab",
-  "塑料": "#95bcde",
-  "搪瓷": "#f1d4a4",
-  "油漆": "#c6b6e3",
-  "纸业": "#b6dfd0",
-  "化工": "#f5ea91",
-  "钢铁": "#e4b8ae",
-  "火柴": "#cad3a5",
-  "其他": "#ddd4c8",
+  "纺织": "#C8B2DB",
+  "橡胶": "#5299C7",
+  "日化": "#B6EBB5",
+  "食品": "#F6C6A1",
+  "其他": "#DCD4CA",
+  "医药": "#F5B043",
+  "塑料": "#8B7067",
+  "电器": "#EC84A9",
+  "化工": "#D4695D",
+  "油漆": "#494C9A",
+  "搪瓷": "#8F88C8",
+  "钢铁": "#DDBAB0",
+  "纸业": "#D4DCBE",
+  "火柴": "#F9F6EE",
   "未知": "#cbc6bc"
 };
 
@@ -49,6 +451,8 @@ const GRAPH_CENTER_RING_STROKE_WIDTH = 1;
 const GRAPH_CENTER_CIRCLE_RADIUS = 56;
 const GRAPH_CENTER_CIRCLE_STROKE_WIDTH = 2;
 const GRAPH_NODE_STROKE_WIDTH = 1.2;
+const GRAPH_BUBBLE_MIN_R = 24;
+const GRAPH_BUBBLE_MAX_R = 70;
 const GRAPH_AD_MAX_W = 132;
 const GRAPH_AD_MAX_H = 132;
 const GRAPH_AD_FALLBACK_W = 76;
@@ -67,6 +471,7 @@ const state = {
   mode: "timeline",
   graphFocus: { industry: null, product: null, issueKey: null },
   detailAd: null,
+  detailSourceMode: "timeline",
   cameras: {
     timeline: { x: 0, y: 0, scale: 1 },
     graph: { x: 0, y: 0, scale: 1 }
@@ -80,21 +485,39 @@ const state = {
   },
   graphSim: null,
   graphWorldBounds: null,
-  graphRootEl: null
+  graphRootEl: null,
+  timelineAutoFit: true,
+  analysisIndustryPanels: [],
+  expandedAxisIssueKey: null,
+  analysisCollapsed: false,
+  visualExpandedTag: null,
+  visualScale: 1,
+  visualAxisMode: "time",
+  visualMetricMode: "count",
+  sidebarCollapsed: false,
+  lang: localStorage.getItem("archiveMLang") === "en" ? "en" : "zh"
 };
 
 const refs = {
+  appShell: document.querySelector(".app-shell"),
+  topBar: document.querySelector(".top-bar"),
   tagRail: document.getElementById("tagRail"),
   resetBtn: document.getElementById("resetBtn"),
-  clearTagBtn: document.getElementById("clearTagBtn"),
+  langToggleBtn: document.getElementById("langToggleBtn"),
   viewSwitch: document.getElementById("viewSwitch"),
   viewToggleBtn: document.getElementById("viewToggleBtn"),
   viewMenuPanel: document.getElementById("viewMenuPanel"),
   timelineView: document.getElementById("timelineView"),
   graphView: document.getElementById("graphView"),
+  visualView: document.getElementById("visualView"),
+  visualHeatmapWrap: document.getElementById("visualHeatmapWrap"),
+  visualAxis: document.getElementById("visualAxis"),
+  visualAxisToggle: document.getElementById("visualAxisToggle"),
+  visualMetricControls: document.getElementById("visualMetricControls"),
   timelineStage: document.getElementById("timelineStage"),
   timelineContainer: document.getElementById("timelineContainer"),
   timelineAxisOverlay: document.getElementById("timelineAxisOverlay"),
+  sidebarToggleBtn: document.getElementById("sidebarToggleBtn"),
   industryList: document.getElementById("industryList"),
   graphSvg: document.getElementById("graphSvg"),
   graphCrumb: document.getElementById("graphCrumb"),
@@ -103,6 +526,11 @@ const refs = {
   statIssues: document.getElementById("statIssues"),
   statIndustries: document.getElementById("statIndustries"),
   statProducts: document.getElementById("statProducts"),
+  analysisDrawer: document.getElementById("analysisDrawer"),
+  analysisCollapseBtn: document.getElementById("analysisCollapseBtn"),
+  analysisYearSpan: document.getElementById("analysisYearSpan"),
+  analysisIndustryCurves: document.getElementById("analysisIndustryCurves"),
+  analysisTags: document.getElementById("analysisTags"),
   tooltip: document.getElementById("tooltip"),
   detailModal: document.getElementById("detailModal"),
   closeModalBtn: document.getElementById("closeModalBtn"),
@@ -120,6 +548,7 @@ init();
 
 async function init() {
   bindGlobalEvents();
+  applyLanguage();
   syncViewMenu();
   renderTagRail();
   initPanZoomControllers();
@@ -142,11 +571,17 @@ function bindGlobalEvents() {
     syncViewMenu();
   });
 
-  refs.clearTagBtn.addEventListener("click", () => {
-    state.tagsSelected.clear();
-    renderTagRail();
-    renderAll();
-  });
+  if (refs.langToggleBtn) {
+    refs.langToggleBtn.addEventListener("click", () => {
+      state.lang = state.lang === "zh" ? "en" : "zh";
+      localStorage.setItem("archiveMLang", state.lang);
+      applyLanguage();
+      renderTagRail();
+      renderSidebar();
+      renderAll();
+      if (state.detailAd) openDetailModal(state.detailAd);
+    });
+  }
 
   refs.resetBtn.addEventListener("click", () => {
     state.tagsSelected.clear();
@@ -155,6 +590,12 @@ function bindGlobalEvents() {
     state.pairsSelected.clear();
     state.viewMenuOpen = false;
     state.graphFocus = { industry: null, product: null, issueKey: null };
+    state.timelineAutoFit = true;
+    state.analysisCollapsed = false;
+    state.visualExpandedTag = null;
+    state.visualScale = 1;
+    state.visualAxisMode = "time";
+    state.visualMetricMode = "count";
     resetCameras();
     syncViewMenu();
     renderTagRail();
@@ -163,13 +604,36 @@ function bindGlobalEvents() {
   });
 
   refs.graphBackBtn.addEventListener("click", stepGraphBack);
+  refs.analysisCollapseBtn.addEventListener("click", () => {
+    state.analysisCollapsed = !state.analysisCollapsed;
+    renderAll();
+  });
+  if (refs.sidebarToggleBtn) {
+    refs.sidebarToggleBtn.addEventListener("click", () => {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+      syncSidebarState();
+      renderAll();
+    });
+  }
   refs.closeModalBtn.addEventListener("click", closeDetailModal);
+  refs.timelineAxisOverlay.addEventListener("click", (e) => {
+    if (e.target.closest(".axis-stack-bar")) return;
+    if (!state.expandedAxisIssueKey) return;
+    state.expandedAxisIssueKey = null;
+    renderAll();
+  });
   refs.detailModal.addEventListener("click", (e) => {
     if (e.target === refs.detailModal) closeDetailModal();
   });
 
   refs.focusInGraphBtn.addEventListener("click", () => {
     if (!state.detailAd) return;
+    if (refs.focusInGraphBtn.dataset.targetMode === "timeline") {
+      const ad = state.detailAd;
+      closeDetailModal();
+      locateAdInTimeline(ad);
+      return;
+    }
     state.graphFocus = {
       industry: state.detailAd.industry,
       product: state.detailAd.product,
@@ -197,7 +661,125 @@ function bindGlobalEvents() {
     enforceCameraBounds("timeline");
     enforceCameraBounds("graph");
     renderTimelineAxis();
+    renderVisualPanel(getFilteredAds());
   });
+
+  if (refs.visualHeatmapWrap) {
+    refs.visualHeatmapWrap.addEventListener("scroll", syncVisualAxisScroll);
+    refs.visualHeatmapWrap.addEventListener("wheel", (e) => {
+      const isZoomGesture = e.ctrlKey || e.metaKey || e.altKey;
+      if (!isZoomGesture) return;
+      e.preventDefault();
+      const prevScale = state.visualScale;
+      const nextScale = clamp(prevScale * Math.exp(-e.deltaY * 0.0025), 1, 5);
+      if (nextScale === prevScale) return;
+      const rect = refs.visualHeatmapWrap.getBoundingClientRect();
+      const focusX = e.clientX - rect.left + refs.visualHeatmapWrap.scrollLeft - 138;
+      const ratio = focusX / Math.max(1, getVisualStepPx(prevScale));
+      state.visualScale = nextScale;
+      renderVisualPanel(getFilteredAds());
+      refs.visualHeatmapWrap.scrollLeft = Math.max(0, ratio * getVisualStepPx(nextScale) - (e.clientX - rect.left) + 138);
+      syncVisualAxisScroll();
+    }, { passive: false });
+  }
+
+  if (refs.visualAxisToggle) {
+    refs.visualAxisToggle.addEventListener("click", (event) => {
+      const btn = event.target.closest(".visual-axis-btn");
+      if (!btn) return;
+      const nextAxis = btn.dataset.axis || "time";
+      if (state.visualAxisMode === nextAxis) return;
+      state.visualAxisMode = nextAxis;
+      state.visualMetricMode = state.visualAxisMode === "industry" ? "axisShare" : "count";
+      state.visualExpandedTag = null;
+      state.visualScale = 1;
+      renderVisualPanel(getFilteredAds());
+    });
+  }
+
+  if (refs.visualMetricControls) {
+    refs.visualMetricControls.addEventListener("click", (event) => {
+      const btn = event.target.closest(".visual-metric-btn");
+      if (!btn) return;
+      if (state.visualAxisMode !== "industry") return;
+      state.visualMetricMode = btn.dataset.metric || "count";
+      renderVisualPanel(getFilteredAds());
+    });
+  }
+}
+
+function t(key) {
+  const langPack = UI_TEXT[state.lang] || UI_TEXT.zh;
+  return langPack[key] || UI_TEXT.zh[key] || key;
+}
+
+function applyLanguage() {
+  document.documentElement.lang = state.lang === "en" ? "en" : "zh-CN";
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  if (refs.langToggleBtn) refs.langToggleBtn.textContent = state.lang === "en" ? "中" : "EN";
+  if (refs.analysisCollapseBtn) {
+    refs.analysisCollapseBtn.textContent = state.analysisCollapsed ? t("expand") : t("collapse");
+  }
+  syncSidebarState();
+  updateDetailLocateButton();
+  syncVisualAxisButtonText();
+}
+
+function syncSidebarState() {
+  if (refs.appShell) refs.appShell.classList.toggle("sidebar-collapsed", state.sidebarCollapsed);
+  if (!refs.sidebarToggleBtn) return;
+  const collapsed = state.sidebarCollapsed;
+  refs.sidebarToggleBtn.textContent = collapsed ? "‹" : "›";
+  refs.sidebarToggleBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  refs.sidebarToggleBtn.setAttribute(
+    "aria-label",
+    collapsed
+      ? (state.lang === "en" ? "Expand filter panel" : "展开筛选面板")
+      : (state.lang === "en" ? "Collapse filter panel" : "收起筛选面板")
+  );
+}
+
+function tagLabel(code) {
+  const def = TAG_DEF_MAP.get(code);
+  if (!def) return code;
+  return state.lang === "en" ? (TAG_LABELS_EN[code] || def.label) : def.label;
+}
+
+function tagDescription(code) {
+  if (state.lang === "en") return FEATURE_DESCRIPTIONS_EN[code] || FEATURE_DESCRIPTIONS[code] || "";
+  return FEATURE_DESCRIPTIONS[code] || "";
+}
+
+function groupLabel(group) {
+  return state.lang === "en" ? (TAG_GROUP_LABELS_EN[group.key] || group.label) : group.label;
+}
+
+function industryLabel(industry) {
+  return state.lang === "en" ? (INDUSTRY_LABELS_EN[industry] || industry) : industry;
+}
+
+function productLabel(product) {
+  return state.lang === "en" ? (PRODUCT_LABELS_EN[product] || product) : product;
+}
+
+function itemUnit(count) {
+  if (state.lang === "en") return count === 1 ? "ad" : "ads";
+  return t("itemUnit");
+}
+
+function countText(count) {
+  return state.lang === "en" ? count + " " + itemUnit(count) : count + t("itemUnit");
+}
+
+function syncVisualAxisButtonText() {
+  if (refs.visualAxisToggle) {
+    const timeBtn = refs.visualAxisToggle.querySelector("[data-axis='time']");
+    const industryBtn = refs.visualAxisToggle.querySelector("[data-axis='industry']");
+    if (timeBtn) timeBtn.textContent = t("timeAxis");
+    if (industryBtn) industryBtn.textContent = t("industryAxis");
+  }
 }
 
 function syncViewMenu() {
@@ -265,6 +847,7 @@ function setupPanZoom(opts) {
     if (Math.abs(e.clientX - startX) + Math.abs(e.clientY - startY) > 6) moved = true;
 
     const cam = state.cameras[modeKey];
+    markCameraUserModified(modeKey);
     cam.x += dx;
     cam.y += dy;
     applyCamera(modeKey);
@@ -293,11 +876,13 @@ function setupPanZoom(opts) {
     const isZoomGesture = e.ctrlKey || e.metaKey || e.altKey;
     if (isZoomGesture) {
       const factor = Math.exp(-e.deltaY * 0.0025);
+      markCameraUserModified(modeKey);
       zoomAt(viewport, modeKey, factor, e.clientX, e.clientY, bounds.min, bounds.max);
       return;
     }
 
     const cam = state.cameras[modeKey];
+    markCameraUserModified(modeKey);
     cam.x -= e.deltaX;
     cam.y -= e.deltaY;
     applyCamera(modeKey);
@@ -306,8 +891,13 @@ function setupPanZoom(opts) {
   viewport.addEventListener("dblclick", (e) => {
     if (ignoreTarget(e.target)) return;
     const bounds = getScaleBounds(opts);
+    markCameraUserModified(modeKey);
     zoomAt(viewport, modeKey, 1.25, e.clientX, e.clientY, bounds.min, bounds.max);
   });
+}
+
+function markCameraUserModified(modeKey) {
+  if (modeKey === "timeline") state.timelineAutoFit = false;
 }
 
 function getScaleBounds(opts) {
@@ -378,11 +968,16 @@ function getTimelineScaleBounds() {
   const layout = state.timelineLayout;
   if (!layout) return { min: TIMELINE_MIN_SCALE, max: TIMELINE_MAX_SCALE };
   const vh = Math.max(1, refs.timelineContainer.clientHeight - layout.axisOverlayH);
+  const vw = Math.max(1, refs.timelineContainer.clientWidth);
   const contentTopY = Number.isFinite(layout.contentTopY) ? layout.contentTopY : 0;
   const contentBottomY = Number.isFinite(layout.contentBottomY) ? layout.contentBottomY : layout.totalH;
   const contentH = Math.max(1, contentBottomY - contentTopY);
+  const contentLeftX = Number.isFinite(layout.contentLeftX) ? layout.contentLeftX : 0;
+  const contentRightX = Number.isFinite(layout.contentRightX) ? layout.contentRightX : layout.totalW;
+  const contentW = Math.max(1, contentRightX - contentLeftX);
   const fitY = Math.max(0.01, (vh - TIMELINE_VERTICAL_MARGIN * 2) / contentH);
-  return { min: clamp(fitY, TIMELINE_MIN_SCALE, 1), max: TIMELINE_MAX_SCALE };
+  const fitX = Math.max(0.01, vw / contentW);
+  return { min: clamp(Math.max(fitY, fitX), TIMELINE_MIN_SCALE, TIMELINE_MAX_SCALE), max: TIMELINE_MAX_SCALE };
 }
 
 function getGraphScaleBounds() {
@@ -485,13 +1080,17 @@ function renderTimelineAxis() {
 
   const cam = state.cameras.timeline;
   const viewW = Math.max(1, refs.timelineContainer.clientWidth);
+  overlay.style.setProperty("--timeline-scale", String(cam.scale));
   const pxPerIssue = layout.gapX * cam.scale;
   const step = getAdaptiveTickStep(pxPerIssue);
   const yearLabelRanges = [];
+  const filtered = getFilteredAds();
 
   const main = document.createElement("div");
   main.className = "axis-mainline";
   overlay.appendChild(main);
+
+  renderTimelineDotStack(overlay, filtered, layout, cam, viewW);
 
   let lastYear = null;
   let lastYearX = -9999;
@@ -618,6 +1217,7 @@ function normalizeRow(row, index) {
     product,
     color: INDUSTRY_COLORS[industry] || INDUSTRY_COLORS["其他"],
     tagList,
+    thumbSrc: "thumbs/" + id + ".png",
     imgSrc: IMAGE_BASE_URL + id + ".png"
   };
 }
@@ -644,7 +1244,7 @@ function renderTagRail() {
     const selectedLabels = selectedCodes
       .map(code => TAG_DEF_MAP.get(code))
       .filter(Boolean)
-      .map(tag => tag.label);
+      .map(tag => tagLabel(tag.code));
 
     const groupEl = document.createElement("div");
     groupEl.className = "filter-group"
@@ -658,7 +1258,7 @@ function renderTagRail() {
 
     const title = document.createElement("span");
     title.className = "filter-group-title";
-    title.textContent = group.label;
+    title.textContent = groupLabel(group);
 
     const summary = document.createElement("span");
     summary.className = "filter-group-summary";
@@ -691,11 +1291,12 @@ function renderTagRail() {
       const option = document.createElement("button");
       option.type = "button";
       option.className = "filter-option" + (state.tagsSelected.has(code) ? " active" : "");
-      option.textContent = tag.label;
+      option.textContent = tagLabel(code);
       option.addEventListener("click", (e) => {
         e.stopPropagation();
         if (state.tagsSelected.has(code)) state.tagsSelected.delete(code);
         else state.tagsSelected.add(code);
+        state.analysisCollapsed = false;
         renderTagRail();
         renderAll();
       });
@@ -710,51 +1311,61 @@ function renderTagRail() {
 }
 
 function getTagGroupSummary(selectedLabels) {
-  if (!selectedLabels.length) return "全部";
+  if (!selectedLabels.length) return t("all");
   if (selectedLabels.length <= 2) return selectedLabels.join(" / ");
-  return "已选 " + selectedLabels.length + " 项";
+  return state.lang === "en" ? selectedLabels.length + " selected" : "已选 " + selectedLabels.length + " 项";
 }
 
 function renderSidebar() {
-  const map = groupByIndustryProduct(state.allAds);
+  const filtered = getFilteredAds({ includePairs: false });
+  const map = groupByIndustryProduct(filtered);
   refs.industryList.innerHTML = "";
   const industries = Array.from(map.keys()).sort((a, b) => {
     const ac = sumCounts(map.get(a));
     const bc = sumCounts(map.get(b));
     return bc - ac;
   });
+  const maxIndustryTotal = Math.max(1, ...industries.map(industry => sumCounts(map.get(industry))));
 
   industries.forEach((industry) => {
     const products = map.get(industry);
     const total = sumCounts(products);
+    const industryPct = Math.round((total / Math.max(1, filtered.length)) * 100);
     const isOpen = state.openIndustries.has(industry);
+    const isIndustrySelected = hasSelectedIndustry(industry);
     const block = document.createElement("div");
     block.className = "industry-block" + (isOpen ? " open" : "");
     const blockInner = document.createElement("div");
     blockInner.className = "industry-block-inner";
 
     const head = document.createElement("div");
-    head.className = "industry-head";
+    head.className = "industry-head" + (isIndustrySelected ? " active" : "");
     const industryColor = INDUSTRY_COLORS[industry] || "#e7e3da";
     head.style.setProperty("--industry-head-bg", industryColor);
+    head.style.setProperty("--row-bar-w", ((total / maxIndustryTotal) * 100).toFixed(3) + "%");
+    head.style.setProperty("--row-bar-color", industryColor);
     head.style.setProperty("--industry-head-ink", isDarkHex(industryColor) ? "#ffffff" : "#000000");
-    head.innerHTML = "<div class=\"industry-head-inner\"><div class=\"left\"><span>" + escapeHtml(industry) + "</span></div><span>" + total + "</span></div>";
+    head.innerHTML = "<div class=\"industry-head-inner\"><div class=\"left\"><span>" + escapeHtml(industryLabel(industry)) + "</span></div><span class=\"count\">" + total + " / " + industryPct + "%</span></div>";
     const body = document.createElement("div");
     body.className = "industry-products" + (isOpen ? " open" : "");
     head.addEventListener("click", () => {
-      if (state.openIndustries.has(industry)) state.openIndustries.delete(industry);
-      else state.openIndustries.add(industry);
-      renderSidebar();
+      toggleIndustrySelection(industry);
     });
 
-    Array.from(products.entries()).sort((a, b) => b[1] - a[1]).forEach(([product, count]) => {
+    const productEntries = Array.from(products.entries()).sort((a, b) => b[1] - a[1]);
+    const maxProductCount = Math.max(1, ...productEntries.map(([, count]) => count));
+    productEntries.forEach(([product, count]) => {
       const key = industry + "|" + product;
+      const pct = Math.round((count / Math.max(1, total)) * 100);
       const row = document.createElement("div");
       row.className = "product-item" + (state.pairsSelected.has(key) ? " active" : "");
-      row.innerHTML = "<div class=\"product-item-inner\"><span>" + escapeHtml(product) + "</span><span>" + count + "</span></div>";
+      row.style.setProperty("--row-bar-w", ((count / maxProductCount) * 100).toFixed(3) + "%");
+      row.style.setProperty("--row-bar-color", industryColor);
+      row.innerHTML = "<div class=\"product-item-inner\"><span>" + escapeHtml(productLabel(product)) + "</span><span>" + count + " / " + pct + "%</span></div>";
       row.addEventListener("click", () => {
         if (state.pairsSelected.has(key)) state.pairsSelected.delete(key);
         else state.pairsSelected.add(key);
+        state.analysisCollapsed = false;
         renderSidebar();
         renderAll();
       });
@@ -771,28 +1382,38 @@ function renderSidebar() {
 function setMode(mode) {
   state.mode = mode;
   state.viewMenuOpen = false;
+  if (refs.appShell) refs.appShell.classList.toggle("visual-mode", mode === "visual");
   syncViewMenu();
   document.querySelectorAll(".mode-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.mode === mode);
   });
   refs.timelineView.classList.toggle("active", mode === "timeline");
   refs.graphView.classList.toggle("active", mode === "graph");
+  refs.visualView.classList.toggle("active", mode === "visual");
   renderAll();
 }
 
 function renderAll() {
   const filtered = getFilteredAds();
+  if (refs.appShell) refs.appShell.classList.toggle("visual-mode", state.mode === "visual");
+  syncSidebarState();
+  renderSidebar();
+  syncAnalysisDrawerState(filtered);
   updateStats(filtered);
+  renderAnalysisPanel(filtered);
   renderTimeline(filtered);
   renderGraph(filtered);
+  renderVisualPanel(filtered);
 }
 
-function getFilteredAds() {
+function getFilteredAds(options = {}) {
+  const includePairs = options.includePairs !== false;
+  const includeTags = options.includeTags !== false;
   const hasPair = state.pairsSelected.size > 0;
   const hasTag = state.tagsSelected.size > 0;
   return state.allAds.filter(ad => {
-    const pairOk = !hasPair || state.pairsSelected.has(ad.industry + "|" + ad.product);
-    const tagOk = !hasTag || Array.from(state.tagsSelected).every(t => ad.tagList.includes(t));
+    const pairOk = !includePairs || !hasPair || state.pairsSelected.has(ad.industry + "|" + ad.product);
+    const tagOk = !includeTags || !hasTag || Array.from(state.tagsSelected).every(t => ad.tagList.includes(t));
     return pairOk && tagOk;
   });
 }
@@ -807,6 +1428,677 @@ function updateStats(filtered) {
   refs.statProducts.textContent = productSet.size;
 }
 
+function hasActiveFilters() {
+  return state.tagsSelected.size > 0 || state.pairsSelected.size > 0;
+}
+
+function syncAnalysisDrawerState(filtered) {
+  const open = hasActiveFilters() && state.mode !== "visual";
+  if (!open) state.analysisCollapsed = false;
+  if (refs.appShell) refs.appShell.classList.toggle("analysis-open", open);
+  if (refs.appShell) refs.appShell.classList.toggle("axis-expanded", open && !!state.expandedAxisIssueKey);
+  if (refs.appShell) refs.appShell.classList.toggle("analysis-collapsed", open && state.analysisCollapsed);
+  if (refs.analysisDrawer) refs.analysisDrawer.setAttribute("aria-hidden", open ? "false" : "true");
+  if (refs.analysisCollapseBtn) {
+    refs.analysisCollapseBtn.textContent = state.analysisCollapsed ? t("expand") : t("collapse");
+    refs.analysisCollapseBtn.setAttribute("aria-expanded", state.analysisCollapsed ? "false" : "true");
+  }
+}
+
+function renderAnalysisPanel(filtered) {
+  if (!refs.analysisYearSpan) return;
+  const emptyText = t("noData");
+  if (!filtered.length) {
+    refs.analysisYearSpan.textContent = emptyText;
+    refs.analysisIndustryCurves.innerHTML = "<div class=\"analysis-empty\">" + escapeHtml(t("noCurve")) + "</div>";
+    refs.analysisTags.innerHTML = "<span class=\"analysis-tag muted\">" + escapeHtml(t("noFeature")) + "</span>";
+    return;
+  }
+
+  const years = filtered.map(ad => ad.year).filter(Number.isFinite);
+  const minYear = Math.min(...years);
+  const maxYear = Math.max(...years);
+  refs.analysisYearSpan.textContent = minYear === maxYear ? String(minYear) : (minYear + "-" + maxYear);
+
+  renderAnalysisIndustryCurves(filtered);
+  renderAnalysisTags(filtered);
+}
+
+function renderAnalysisIndustryCurves(filtered) {
+  const container = refs.analysisIndustryCurves;
+  container.innerHTML = "";
+  const industryEntries = Array.from(aggregateBy(filtered, "industry").entries()).sort((a, b) => b[1] - a[1]);
+  const availableIndustries = industryEntries.map(([industry]) => industry);
+  if (!availableIndustries.length) {
+    container.innerHTML = "<div class=\"analysis-empty\">" + escapeHtml(t("noData")) + "</div>";
+    return;
+  }
+
+  syncAnalysisIndustryPanels(availableIndustries);
+  const years = Array.from(new Set(state.issues.map(issue => issue.year))).sort((a, b) => a - b);
+  const panelIndustries = state.analysisIndustryPanels.slice(0, 4);
+  const maxYearCount = Math.max(1, ...panelIndustries.map(industry => {
+    return Math.max(0, ...years.map(year => filtered.filter(ad => ad.industry === industry && ad.year === year).length));
+  }));
+
+  panelIndustries.forEach((industry, panelIndex) => {
+    const panel = document.createElement("div");
+    panel.className = "analysis-curve-panel";
+
+    const head = document.createElement("div");
+    head.className = "analysis-curve-head";
+    const title = document.createElement("div");
+    title.className = "analysis-curve-title";
+    title.textContent = industry ? industryLabel(industry) : "-";
+    const select = document.createElement("select");
+    select.className = "analysis-curve-select";
+    select.setAttribute("aria-label", t("filterPanelAria"));
+    availableIndustries.forEach(optionIndustry => {
+      const option = document.createElement("option");
+      option.value = optionIndustry;
+      option.textContent = industryLabel(optionIndustry);
+      option.selected = optionIndustry === industry;
+      select.appendChild(option);
+    });
+    select.addEventListener("change", () => {
+      state.analysisIndustryPanels[panelIndex] = select.value;
+      renderAnalysisIndustryCurves(filtered);
+    });
+    head.appendChild(title);
+    head.appendChild(select);
+
+    const svg = buildIndustryAreaSvg(filtered, industry, years, maxYearCount);
+    const yearRail = buildAreaYearRail(years);
+    const hoverLabel = document.createElement("div");
+    hoverLabel.className = "analysis-area-html-label";
+    panel.appendChild(head);
+    panel.appendChild(svg);
+    panel.appendChild(yearRail);
+    panel.appendChild(hoverLabel);
+    container.appendChild(panel);
+  });
+}
+
+function syncAnalysisIndustryPanels(availableIndustries) {
+  const preserved = state.analysisIndustryPanels.filter(industry => availableIndustries.includes(industry));
+  const next = preserved.slice(0, 4);
+  availableIndustries.forEach(industry => {
+    if (next.length >= 4) return;
+    if (!next.includes(industry)) next.push(industry);
+  });
+  while (next.length < 4) next.push(availableIndustries[0]);
+  state.analysisIndustryPanels = next;
+}
+
+function buildIndustryAreaSvg(filtered, industry, years, maxCount) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 320 112");
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.classList.add("analysis-area-svg");
+  svg.dataset.industry = industry;
+  const color = INDUSTRY_COLORS[industry] || INDUSTRY_COLORS["其他"];
+  const values = years.map(year => ({
+    year,
+    count: filtered.filter(ad => ad.industry === industry && ad.year === year).length
+  }));
+  const total = values.reduce((sum, d) => sum + d.count, 0);
+  const xFor = (idx) => values.length <= 1 ? 22 : 22 + idx * (276 / (values.length - 1));
+  const yFor = (count) => 90 - (count / Math.max(1, maxCount)) * 64;
+  const topPoints = values.map((d, idx) => xFor(idx) + "," + yFor(d.count));
+  const areaPoints = ["22,90"].concat(topPoints, ["298,90"]).join(" ");
+  const area = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  area.setAttribute("points", areaPoints);
+  area.setAttribute("fill", color);
+  area.setAttribute("class", "analysis-area-fill");
+  svg.appendChild(area);
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  line.setAttribute("points", topPoints.join(" "));
+  line.setAttribute("stroke", color);
+  line.setAttribute("class", "analysis-area-line");
+  svg.appendChild(line);
+  const vLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  vLine.setAttribute("class", "analysis-area-guide analysis-area-guide-v");
+  vLine.setAttribute("y1", "20");
+  vLine.setAttribute("y2", "92");
+  svg.appendChild(vLine);
+  const hLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  hLine.setAttribute("class", "analysis-area-guide analysis-area-guide-h");
+  hLine.setAttribute("x1", "18");
+  hLine.setAttribute("x2", "302");
+  svg.appendChild(hLine);
+  values.forEach((d, idx) => {
+    const hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    const x = xFor(idx);
+    const nextX = idx < values.length - 1 ? xFor(idx + 1) : x + 36;
+    const prevX = idx > 0 ? xFor(idx - 1) : x - 36;
+    hit.setAttribute("x", String(Math.max(0, (prevX + x) / 2)));
+    hit.setAttribute("y", "0");
+    hit.setAttribute("width", String(Math.max(10, (nextX - prevX) / 2)));
+    hit.setAttribute("height", "112");
+    hit.setAttribute("class", "analysis-area-hit");
+    hit.dataset.year = String(d.year);
+    hit.addEventListener("mouseenter", () => syncAreaHover(d.year));
+    hit.addEventListener("mousemove", () => syncAreaHover(d.year));
+    hit.addEventListener("mouseleave", clearAreaHover);
+    svg.appendChild(hit);
+  });
+  return svg;
+}
+
+function buildAreaYearRail(years) {
+  const rail = document.createElement("div");
+  rail.className = "analysis-area-years";
+  years.forEach((year) => {
+    const item = document.createElement("span");
+    item.textContent = String(year);
+    rail.appendChild(item);
+  });
+  return rail;
+}
+
+function syncAreaHover(year) {
+  document.querySelectorAll(".analysis-area-svg").forEach(svg => {
+    const industry = svg.dataset.industry || "";
+    const filtered = getFilteredAds();
+    const industryYearAds = filtered.filter(ad => ad.industry === industry && ad.year === year);
+    const years = Array.from(new Set(state.issues.map(issue => issue.year))).sort((a, b) => a - b);
+    const panelIndustries = state.analysisIndustryPanels.slice(0, 4);
+    const maxYearCount = Math.max(1, ...panelIndustries.map(panelIndustry =>
+      Math.max(0, ...years.map(y => filtered.filter(ad => ad.industry === panelIndustry && ad.year === y).length))
+    ));
+    const idx = years.indexOf(year);
+    if (idx < 0) return;
+    const x = years.length <= 1 ? 22 : 22 + idx * (276 / (years.length - 1));
+    const y = 90 - (industryYearAds.length / Math.max(1, maxYearCount)) * 64;
+    const v = svg.querySelector(".analysis-area-guide-v");
+    const h = svg.querySelector(".analysis-area-guide-h");
+    const label = svg.parentElement ? svg.parentElement.querySelector(".analysis-area-html-label") : null;
+    if (v) {
+      v.setAttribute("x1", String(x));
+      v.setAttribute("x2", String(x));
+    }
+    if (h) {
+      h.setAttribute("y1", String(y));
+      h.setAttribute("y2", String(y));
+    }
+    if (label) {
+      const nearRightEdge = x > 238;
+      label.style.left = nearRightEdge
+        ? "calc(" + ((x / 320) * 100).toFixed(3) + "% - 10px)"
+        : "calc(" + ((x / 320) * 100).toFixed(3) + "% + 8px)";
+      label.style.top = "calc(" + ((y / 112) * 100).toFixed(3) + "% - 28px)";
+      label.style.transform = nearRightEdge ? "translateX(-100%)" : "translateX(0)";
+      label.textContent = year + " / " + industryLabel(industry) + " / " + countText(industryYearAds.length);
+    }
+    svg.classList.add("hovering");
+  });
+}
+
+function clearAreaHover() {
+  document.querySelectorAll(".analysis-area-svg").forEach(svg => svg.classList.remove("hovering"));
+}
+
+function renderAnalysisBars(opts) {
+  const container = opts.container;
+  const entries = opts.entries.slice(0, opts.limit);
+  container.innerHTML = "";
+  if (!entries.length) {
+    container.innerHTML = "<div class=\"analysis-empty\">" + escapeHtml(t("noData")) + "</div>";
+    return;
+  }
+  const max = Math.max(...entries.map((entry) => entry[1]), 1);
+  entries.forEach(([label, count]) => {
+    const pct = Math.round((count / Math.max(1, opts.total)) * 100);
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "analysis-bar" + (opts.isActive(label) ? " active" : "");
+    row.style.setProperty("--bar-w", Math.max(6, (count / max) * 100) + "%");
+    row.style.setProperty("--bar-color", opts.getColor(label));
+    row.innerHTML = "<span class=\"analysis-bar-label\">" + escapeHtml(industryLabel(label)) + "</span><span class=\"analysis-bar-count\">" + count + " / " + pct + "%</span>";
+    row.addEventListener("click", () => opts.onClick(label));
+    container.appendChild(row);
+  });
+}
+
+function renderAnalysisTags(filtered) {
+  const tagCounts = new Map();
+  filtered.forEach(ad => {
+    ad.tagList.forEach(code => tagCounts.set(code, (tagCounts.get(code) || 0) + 1));
+  });
+  const entries = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  refs.analysisTags.innerHTML = "";
+  if (!entries.length) {
+    refs.analysisTags.innerHTML = "<span class=\"analysis-tag muted\">" + escapeHtml(t("noFeature")) + "</span>";
+    return;
+  }
+  entries.forEach(([code, count]) => {
+    const def = TAG_DEF_MAP.get(code);
+    const tag = document.createElement("button");
+    tag.type = "button";
+    tag.className = "analysis-tag" + (state.tagsSelected.has(code) ? " active" : "");
+    tag.textContent = (def ? tagLabel(code) : code) + " " + count;
+    tag.addEventListener("click", () => {
+      if (state.tagsSelected.has(code)) state.tagsSelected.delete(code);
+      else state.tagsSelected.add(code);
+      renderTagRail();
+      renderAll();
+    });
+    refs.analysisTags.appendChild(tag);
+  });
+}
+
+function renderVisualPanel(filtered) {
+  if (!refs.visualHeatmapWrap || !refs.visualAxis) return;
+  if (state.mode !== "visual") return;
+  normalizeVisualMetricMode();
+  const axisItems = getVisualAxisItems(filtered);
+  const availableW = Math.max(320, refs.visualHeatmapWrap.clientWidth || 960);
+  const maxCellW = state.visualAxisMode === "industry" ? 140 : 42;
+  const baseCellW = Math.max(5, Math.min(maxCellW, Math.floor((availableW - 150) / Math.max(1, axisItems.length))));
+  const cellW = Math.round(baseCellW * state.visualScale);
+  const activeAds = filtered;
+  const tagTotals = new Map(VISUAL_TAGS.map(tag => [
+    tag.code,
+    activeAds.filter(ad => ad.tagList.includes(tag.code)).length
+  ]));
+  const axisTotals = new Map(axisItems.map(item => [
+    item.key,
+    activeAds.filter(ad => isAdInVisualAxisItem(ad, item)).length
+  ]));
+  const maxMetric = Math.max(1, ...VISUAL_TAGS.flatMap(tag =>
+    axisItems.map(item => getVisualCellMetric(activeAds, tag.code, item, tagTotals, axisTotals).value)
+  ));
+
+  refs.visualHeatmapWrap.style.setProperty("--visual-cell-w", cellW + "px");
+  refs.visualHeatmapWrap.style.setProperty("--issue-count", axisItems.length);
+  refs.visualHeatmapWrap.innerHTML = "";
+  syncVisualAxisControls();
+  syncVisualMetricControls();
+
+  VISUAL_TAGS.forEach(tag => {
+    const row = document.createElement("div");
+    row.className = "visual-row" + (state.visualExpandedTag === tag.code ? " expanded" : "");
+
+    const label = document.createElement("button");
+    label.type = "button";
+    label.className = "visual-row-label";
+    label.setAttribute("aria-expanded", state.visualExpandedTag === tag.code ? "true" : "false");
+    label.innerHTML = "<span>" + escapeHtml(tagLabel(tag.code)) + "</span><span class=\"visual-row-caret\" aria-hidden=\"true\"></span>";
+    label.addEventListener("click", () => {
+      const nextExpanded = state.visualExpandedTag === tag.code ? null : tag.code;
+      state.visualExpandedTag = nextExpanded;
+      if (nextExpanded && state.visualAxisMode === "time") state.visualScale = Math.max(state.visualScale, 2.2);
+      renderVisualPanel(getFilteredAds());
+      syncVisualAxisScroll();
+    });
+
+    const description = tagDescription(tag.code);
+    const note = document.createElement("div");
+    note.className = "visual-feature-note";
+    note.innerHTML = "<div class=\"visual-feature-note-kicker\">" + escapeHtml(t("featureExplain")) + "</div><div class=\"visual-feature-note-title\">" + escapeHtml(tagLabel(tag.code)) + "</div><p>" + escapeHtml(description) + "</p>";
+
+    const cells = document.createElement("div");
+    cells.className = "visual-cells";
+    axisItems.forEach(item => {
+      const ads = getVisualCellAds(activeAds, tag.code, item);
+      const count = ads.length;
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "visual-cell";
+      const metric = getVisualCellMetric(activeAds, tag.code, item, tagTotals, axisTotals);
+      cell.style.setProperty("--heat", String(metric.value ? Math.pow(metric.value / maxMetric, 0.58) : 0));
+      const tooltipText = tagLabel(tag.code) + " / " + item.label + " / " + countText(count) + metric.tooltipSuffix;
+      cell.setAttribute("aria-label", tooltipText);
+      cell.addEventListener("mouseenter", (event) => showAnalysisTooltip(event, tooltipText));
+      cell.addEventListener("mousemove", (event) => showAnalysisTooltip(event, tooltipText));
+      cell.addEventListener("mouseleave", hideTooltip);
+      cells.appendChild(cell);
+    });
+
+    const strip = document.createElement("div");
+    strip.className = "visual-ad-strip";
+    axisItems.forEach(item => {
+      const bucket = document.createElement("div");
+      bucket.className = "visual-ad-bucket";
+      getVisualCellAds(activeAds, tag.code, item)
+        .slice(0, 12)
+        .forEach(ad => {
+          const img = document.createElement("img");
+          img.src = ad.thumbSrc || ad.imgSrc;
+          img.alt = ad.id;
+          img.addEventListener("mouseenter", (event) => showTooltip(event, ad));
+          img.addEventListener("mousemove", moveTooltip);
+          img.addEventListener("mouseleave", hideTooltip);
+          img.addEventListener("click", () => openDetailModal(ad));
+          bucket.appendChild(img);
+        });
+      strip.appendChild(bucket);
+    });
+
+    row.appendChild(label);
+    if (state.visualExpandedTag === tag.code && description) row.appendChild(note);
+    row.appendChild(cells);
+    row.appendChild(strip);
+    refs.visualHeatmapWrap.appendChild(row);
+  });
+
+  renderVisualAxis(axisItems, cellW);
+  syncVisualAxisScroll();
+}
+
+function getVisualAxisItems(filtered) {
+  if (state.visualAxisMode === "industry") {
+    const counts = aggregateBy(filtered, "industry");
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "zh-Hans-CN"))
+      .map(([industry]) => ({ key: industry, label: industryLabel(industry), group: t("industry"), type: "industry" }));
+  }
+  return state.issues.map(issue => ({ key: issue.key, label: issue.key, issue, type: "time" }));
+}
+
+function getVisualCellAds(ads, tagCode, item) {
+  return ads.filter(ad => {
+    if (!ad.tagList.includes(tagCode)) return false;
+    return isAdInVisualAxisItem(ad, item);
+  });
+}
+
+function isAdInVisualAxisItem(ad, item) {
+  if (item.type === "industry") return ad.industry === item.key;
+  return ad.issueKey === item.key;
+}
+
+function getVisualCellMetric(ads, tagCode, item, tagTotals, axisTotals) {
+  const count = getVisualCellAds(ads, tagCode, item).length;
+  if (state.visualAxisMode === "industry" && state.visualMetricMode === "axisShare") {
+    const axisTotal = axisTotals.get(item.key) || 0;
+    const value = axisTotal ? count / axisTotal : 0;
+    return { value, tooltipSuffix: " / " + count + "/" + axisTotal + " = " + Math.round(value * 100) + "% " + getVisualAxisShareLabel() };
+  }
+  if (state.visualAxisMode === "industry" && state.visualMetricMode === "tagShare") {
+    const tagTotal = tagTotals.get(tagCode) || 0;
+    const value = tagTotal ? count / tagTotal : 0;
+    return { value, tooltipSuffix: " / " + count + "/" + tagTotal + " = " + Math.round(value * 100) + "% " + getVisualTagShareLabel() };
+  }
+  return { value: count, tooltipSuffix: "" };
+}
+
+function getVisualMetricLabel() {
+  if (state.visualMetricMode === "axisShare") return getVisualAxisShareButtonLabel();
+  if (state.visualMetricMode === "tagShare") return getVisualTagShareButtonLabel();
+  return t("count");
+}
+
+function syncVisualMetricControls() {
+  if (!refs.visualMetricControls) return;
+  refs.visualMetricControls.hidden = state.visualAxisMode !== "industry";
+  refs.visualMetricControls.querySelectorAll(".visual-metric-btn").forEach(btn => {
+    const metric = btn.dataset.metric || "count";
+    btn.classList.toggle("active", metric === state.visualMetricMode);
+    if (metric === "axisShare") btn.textContent = getVisualAxisShareButtonLabel();
+    if (metric === "tagShare") btn.textContent = getVisualTagShareButtonLabel();
+  });
+}
+
+function syncVisualAxisControls() {
+  if (!refs.visualAxisToggle) return;
+  syncVisualAxisButtonText();
+  refs.visualAxisToggle.querySelectorAll(".visual-axis-btn").forEach(btn => {
+    const axis = btn.dataset.axis || "time";
+    btn.classList.toggle("active", axis === state.visualAxisMode);
+  });
+}
+
+function normalizeVisualMetricMode() {
+  if (state.visualAxisMode === "time") {
+    state.visualMetricMode = "count";
+    return;
+  }
+  if (state.visualMetricMode !== "axisShare" && state.visualMetricMode !== "tagShare") {
+    state.visualMetricMode = "axisShare";
+  }
+}
+
+function getVisualAxisShareButtonLabel() {
+  return t("axisShare");
+}
+
+function getVisualTagShareButtonLabel() {
+  return t("tagShare");
+}
+
+function getVisualAxisShareLabel() {
+  return t("axisShareLong");
+}
+
+function getVisualTagShareLabel() {
+  return t("tagShareLong");
+}
+
+function renderVisualAxis(axisItems, cellW) {
+  const step = cellW + 1;
+  const totalW = Math.max(1, axisItems.length) * step;
+  const pxPerIssue = step;
+  const tickStep = getAdaptiveTickStep(pxPerIssue);
+  refs.visualAxis.style.setProperty("--visual-cell-w", cellW + "px");
+  refs.visualAxis.style.setProperty("--issue-count", axisItems.length);
+  refs.visualAxis.innerHTML = "<div class=\"visual-axis-content\"></div>";
+  const content = refs.visualAxis.querySelector(".visual-axis-content");
+  content.style.width = totalW + "px";
+  if (state.visualAxisMode === "time") {
+    const main = document.createElement("div");
+    main.className = "axis-mainline";
+    content.appendChild(main);
+  }
+  const yearLabelRanges = [];
+  let lastYear = null;
+  let lastYearX = -9999;
+  axisItems.forEach((item, idx) => {
+    const x = idx * step;
+    if (state.visualAxisMode === "industry") {
+      const tick = document.createElement("div");
+      tick.className = "visual-axis-year visual-axis-industry";
+      tick.style.left = (x + cellW / 2) + "px";
+      tick.textContent = item.label;
+      content.appendChild(tick);
+      return;
+    }
+    const issue = item.issue;
+    const prevIssue = axisItems[idx - 1] && axisItems[idx - 1].issue;
+    if (issue.year !== (prevIssue && prevIssue.year) && issue.year !== lastYear && x - lastYearX >= 56) {
+      const year = document.createElement("div");
+      year.className = "axis-year-label";
+      year.style.left = (x + cellW / 2) + "px";
+      year.textContent = String(issue.year);
+      content.appendChild(year);
+      const yearHalfW = measureAxisLabelHalfWidth(issue.year, 11, 500, 0.8, 18);
+      const yearX = x + cellW / 2;
+      yearLabelRanges.push({
+        minX: yearX - yearHalfW,
+        maxX: yearX + yearHalfW
+      });
+      lastYear = issue.year;
+      lastYearX = x;
+    }
+    if (idx % tickStep !== 0 && issue.year === (prevIssue && prevIssue.year)) return;
+    const tick = document.createElement("div");
+    tick.className = "axis-tick";
+    tick.style.left = (x + cellW / 2) + "px";
+    content.appendChild(tick);
+    const issueHalfW = measureAxisLabelHalfWidth(issue.issue, 10, 400, 0.8, 0);
+    const issueX = x + cellW / 2;
+    const overlapsYear = yearLabelRanges.some(range =>
+      (issueX - issueHalfW) <= range.maxX && (issueX + issueHalfW) >= range.minX
+    );
+    if (overlapsYear) return;
+    const issueLabel = document.createElement("div");
+    issueLabel.className = "axis-issue-label";
+    issueLabel.style.left = issueX + "px";
+    issueLabel.textContent = String(issue.issue || "");
+    content.appendChild(issueLabel);
+  });
+}
+
+function getVisualStepPx(scale) {
+  const availableW = Math.max(320, refs.visualHeatmapWrap ? refs.visualHeatmapWrap.clientWidth : 960);
+  const itemCount = state.visualAxisMode === "industry"
+    ? Math.max(1, getVisualAxisItems(getFilteredAds()).length)
+    : Math.max(1, state.issues.length);
+  const maxCellW = state.visualAxisMode === "industry" ? 140 : 42;
+  const baseCellW = Math.max(5, Math.min(maxCellW, Math.floor((availableW - 150) / itemCount)));
+  return Math.round(baseCellW * scale) + 1;
+}
+
+function syncVisualAxisScroll() {
+  if (!refs.visualAxis || !refs.visualHeatmapWrap) return;
+  const content = refs.visualAxis.querySelector(".visual-axis-content");
+  if (!content) return;
+  content.style.transform = "translateX(" + (-refs.visualHeatmapWrap.scrollLeft) + "px)";
+}
+
+function hasSelectedIndustry(industry) {
+  for (const key of state.pairsSelected) {
+    if (key.split("|")[0] === industry) return true;
+  }
+  return false;
+}
+
+function hasSelectedProduct(product) {
+  for (const key of state.pairsSelected) {
+    if (key.split("|")[1] === product) return true;
+  }
+  return false;
+}
+
+function toggleIndustrySelection(industry) {
+  const keys = getIndustryProductKeys(industry);
+  const allSelected = keys.length > 0 && keys.every(key => state.pairsSelected.has(key));
+  keys.forEach(key => {
+    if (allSelected) state.pairsSelected.delete(key);
+    else state.pairsSelected.add(key);
+  });
+  state.analysisCollapsed = false;
+  if (!allSelected) state.openIndustries.add(industry);
+  renderSidebar();
+  renderAll();
+}
+
+function toggleProductSelection(product) {
+  const keys = getProductKeys(product);
+  const allSelected = keys.length > 0 && keys.every(key => state.pairsSelected.has(key));
+  keys.forEach(key => {
+    if (allSelected) state.pairsSelected.delete(key);
+    else state.pairsSelected.add(key);
+  });
+  state.analysisCollapsed = false;
+  renderSidebar();
+  renderAll();
+}
+
+function getIndustryProductKeys(industry) {
+  const keys = new Set();
+  state.allAds.forEach(ad => {
+    if (ad.industry === industry) keys.add(ad.industry + "|" + ad.product);
+  });
+  return Array.from(keys);
+}
+
+function getProductKeys(product) {
+  const keys = new Set();
+  state.allAds.forEach(ad => {
+    if (ad.product === product) keys.add(ad.industry + "|" + ad.product);
+  });
+  return Array.from(keys);
+}
+
+function renderTimelineDotStack(overlay, filtered, layout, cam, viewW) {
+  if (!hasActiveFilters() || !filtered.length) return;
+  const issueMap = new Map();
+  filtered.forEach(ad => {
+    if (!issueMap.has(ad.issueKey)) issueMap.set(ad.issueKey, []);
+    issueMap.get(ad.issueKey).push(ad);
+  });
+  const entries = state.issues.map((issue, idx) => ({
+    issue,
+    idx,
+    ads: issueMap.get(issue.key) || []
+  }));
+  if (!entries.length) return;
+
+  const maxCount = Math.max(...entries.map(entry => entry.ads.length), 1);
+  entries.forEach(entry => {
+    if (!entry.ads.length) return;
+    const worldX = layout.leftPad + entry.idx * layout.gapX;
+    const sx = cam.x + worldX * cam.scale;
+    if (sx < -30 || sx > viewW + 30) return;
+    const industryGroups = groupAdsByIndustry(entry.ads)
+      .sort((a, b) => b.ads.length - a.ads.length || a.industry.localeCompare(b.industry, "zh-Hans-CN"));
+    const bar = document.createElement("div");
+    const isExpanded = state.expandedAxisIssueKey === entry.issue.key;
+    bar.className = "axis-stack-bar" + (isExpanded ? " expanded" : "");
+    bar.style.left = sx + "px";
+    bar.style.height = Math.max(isExpanded ? 86 : 10, (entry.ads.length / maxCount) * (isExpanded ? 106 : 54)) + "px";
+    bar.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+    });
+    bar.addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.expandedAxisIssueKey = isExpanded ? null : entry.issue.key;
+      renderAll();
+    });
+    industryGroups.forEach((group) => {
+      const sample = group.ads[0];
+      const segment = document.createElement("button");
+      segment.type = "button";
+      segment.className = "axis-stack-segment";
+      segment.style.flexGrow = String(group.ads.length);
+      segment.style.backgroundColor = sample.color;
+      const pct = Math.round((group.ads.length / entry.ads.length) * 100);
+      const tooltipText = entry.issue.key + " / " + industryLabel(group.industry) + " / " + countText(group.ads.length) + " / " + pct + "%";
+      segment.setAttribute("aria-label", tooltipText);
+      segment.addEventListener("pointerdown", (e) => {
+        e.stopPropagation();
+      });
+      segment.addEventListener("pointerenter", (event) => {
+        showAnalysisTooltip(event, tooltipText);
+      });
+      segment.addEventListener("pointermove", (event) => {
+        showAnalysisTooltip(event, tooltipText);
+      });
+      segment.addEventListener("pointerleave", hideTooltip);
+      segment.addEventListener("mouseover", (event) => {
+        showAnalysisTooltip(event, tooltipText);
+      });
+      segment.addEventListener("mousemove", (event) => {
+        showAnalysisTooltip(event, tooltipText);
+      });
+      segment.addEventListener("mouseout", hideTooltip);
+      segment.addEventListener("click", (e) => {
+        e.stopPropagation();
+        state.expandedAxisIssueKey = isExpanded ? null : entry.issue.key;
+        renderAll();
+      });
+      bar.appendChild(segment);
+    });
+    overlay.appendChild(bar);
+  });
+}
+
+function showAnalysisTooltip(event, text) {
+  refs.tooltip.style.display = "block";
+  refs.tooltip.textContent = text;
+  moveTooltip(event);
+}
+
+function groupAdsByIndustry(ads) {
+  const map = new Map();
+  ads.forEach(ad => {
+    if (!map.has(ad.industry)) map.set(ad.industry, []);
+    map.get(ad.industry).push(ad);
+  });
+  return Array.from(map.entries()).map(([industry, groupedAds]) => ({ industry, ads: groupedAds }));
+}
+
 function renderTimeline(filtered) {
   const stage = refs.timelineStage;
   stage.innerHTML = "";
@@ -816,7 +2108,7 @@ function renderTimeline(filtered) {
   const topPad = 24;
   const rowH = 31;
   const adH = TIMELINE_AD_IMG_H + TIMELINE_AD_BAR_H;
-  const axisOverlayH = 72;
+  const axisOverlayH = hasActiveFilters() ? 132 : 72;
   const timelineAdSizes = state.allAds.map(ad => getTimelineAdSize(ad));
 
   const maxStack = state.allAds.reduce((m, a) => Math.max(m, a.stackIndex), 0);
@@ -851,14 +2143,19 @@ function renderTimeline(filtered) {
     const y = topPad + (maxStack - ad.stackIndex) * rowH;
     const el = document.createElement("div");
     el.className = "ad-point" + (filteredSet.has(ad.id) ? "" : " dimmed");
+    el.dataset.adId = ad.id;
     el.style.left = x + "px";
     el.style.top = y + "px";
     el.style.width = adSize.w + "px";
     el.style.height = adH + "px";
     el.style.borderBottomColor = ad.color;
+    ad.timelineRect = { x, y, w: adSize.w, h: adH };
 
     const img = document.createElement("img");
-    img.src = ad.imgSrc;
+    img.src = ad.thumbSrc || ad.imgSrc;
+    img.onerror = () => {
+      if (img.src !== ad.imgSrc) img.src = ad.imgSrc;
+    };
     img.alt = ad.id;
     el.appendChild(img);
 
@@ -874,11 +2171,13 @@ function renderTimeline(filtered) {
     stage.appendChild(el);
   });
 
+  if (state.timelineAutoFit) fitTimelineToDefaultView();
   applyCamera("timeline");
 }
 
 function getTimelineAdSize(ad) {
-  const meta = ad && ad.imgSrc ? adImageMetaCache.get(ad.imgSrc) : null;
+  const src = ad && (ad.thumbSrc || ad.imgSrc);
+  const meta = src ? adImageMetaCache.get(src) : null;
   const sourceW = meta && Number.isFinite(meta.w) && meta.w > 0 ? meta.w : GRAPH_AD_FALLBACK_W;
   const sourceH = meta && Number.isFinite(meta.h) && meta.h > 0 ? meta.h : GRAPH_AD_FALLBACK_H;
   const scale = TIMELINE_AD_IMG_H / Math.max(1, sourceH);
@@ -890,13 +2189,27 @@ function getTimelineAdSize(ad) {
 
 function primeTimelineAdImageMeta() {
   const pending = state.allAds
-    .map(ad => ensureAdImageMeta(ad.imgSrc))
+    .map(ad => ensureAdImageMeta(ad.thumbSrc || ad.imgSrc))
     .filter(Boolean);
   if (!pending.length) return;
   Promise.all(pending).then(() => {
     if (state.mode !== "timeline") return;
     renderTimeline(getFilteredAds());
   }).catch(() => {});
+}
+
+function fitTimelineToDefaultView() {
+  const layout = state.timelineLayout;
+  if (!layout) return;
+  const bounds = getTimelineScaleBounds();
+  const cam = state.cameras.timeline;
+  const contentLeftX = Number.isFinite(layout.contentLeftX) ? layout.contentLeftX : 0;
+  const contentRightX = Number.isFinite(layout.contentRightX) ? layout.contentRightX : layout.totalW;
+  const contentW = Math.max(1, contentRightX - contentLeftX);
+  const viewW = Math.max(1, refs.timelineContainer.clientWidth);
+  const fitX = viewW / contentW;
+  cam.scale = clamp(fitX, bounds.min, bounds.max);
+  enforceCameraBounds("timeline");
 }
 
 function renderGraph(filtered) {
@@ -920,8 +2233,8 @@ function renderGraph(filtered) {
   state.graphRootEl = null;
   if (!filtered.length) {
     state.graphWorldBounds = null;
-    drawSvgText(svgEl, w / 2, h / 2, "当前筛选下暂无数据", 16, "#000000");
-    refs.graphCrumb.textContent = "图谱层级：无结果";
+    drawSvgText(svgEl, w / 2, h / 2, t("noData"), 16, "#000000");
+    refs.graphCrumb.textContent = t("graphLevel") + "：" + t("noResult");
     applyCamera("graph");
     return;
   }
@@ -999,19 +2312,26 @@ function renderGraph(filtered) {
         });
       const body = g.append("g").attr("class", "graph-node-body");
       const nonAdBody = body.filter(d => d.kind !== "ad");
-      nonAdBody.append("rect")
+      nonAdBody.append("circle")
         .attr("class", "graph-node-rect")
-        .attr("x", d => -d.w / 2)
-        .attr("y", d => -d.h / 2)
-        .attr("width", d => d.w)
-        .attr("height", d => d.h)
-        .attr("rx", d => Math.min(18, d.h / 2))
-        .attr("ry", d => Math.min(18, d.h / 2));
+        .attr("r", d => d.r || Math.min(d.w, d.h) / 2);
       nonAdBody.append("text")
         .attr("class", "graph-node-text")
+        .classed("graph-node-text-small", d => state.lang === "en" || d.kind === "issue" || d.kind === "product")
+        .style("--graph-node-text-scale", d => getGraphNodeTextScale(d))
         .attr("x", 0)
-        .attr("y", d => d.subtext ? -4 : 5)
-        .text(d => d.displayLabel);
+        .each(function(d) {
+          const text = d3.select(this);
+          const lines = d.displayLines && d.displayLines.length ? d.displayLines : [d.displayLabel];
+          const lineH = state.lang === "en" ? 11 : (d.kind === "product" ? 13 : 14);
+          const startY = lines.length > 1 ? -((lines.length - 1) * lineH) / 2 + 5 : (d.subtext ? -4 : 5);
+          lines.forEach((line, idx) => {
+            text.append("tspan")
+              .attr("x", 0)
+              .attr("y", startY + idx * lineH)
+              .text(line);
+          });
+        });
       nonAdBody.filter(d => !!d.subtext)
         .append("text")
         .attr("class", "graph-node-subtext")
@@ -1080,14 +2400,25 @@ function renderGraph(filtered) {
         .attr("r", GRAPH_CENTER_CIRCLE_RADIUS);
       body.append("text")
         .attr("class", "graph-center-text")
+        .style("--graph-center-text-scale", d => getGraphCenterTextScale(d))
         .attr("x", 0)
-        .attr("y", -4)
-        .text(d => trimLabel(d.label, 12));
+        .each(function(d) {
+          const text = d3.select(this);
+          const lines = d.displayLines && d.displayLines.length ? d.displayLines : [d.displayLabel || d.label];
+          const lineH = state.lang === "en" ? 13 : 15;
+          const startY = lines.length > 1 ? -((lines.length - 1) * lineH) / 2 - 2 : -4;
+          lines.forEach((line, idx) => {
+            text.append("tspan")
+              .attr("x", 0)
+              .attr("y", startY + idx * lineH)
+              .text(line);
+          });
+        });
       body.append("text")
         .attr("class", "graph-center-subtext")
         .attr("x", 0)
-        .attr("y", 18)
-        .text(d => d.count + "条");
+        .attr("y", d => state.lang === "en" && d.displayLines && d.displayLines.length > 1 ? 28 : 18)
+        .text(d => countText(d.count));
       return g;
     })
     .classed("selected", () => hasGraphSelection);
@@ -1161,7 +2492,8 @@ function buildGraphModel(filtered, focus, w, h) {
 
   const rootNode = makeGraphNode({
     id: rootId,
-    label: "全部广告",
+    label: t("allAds"),
+    displayLabel: t("allAds"),
     kind: "root",
     count: filtered.length,
     depth: 0,
@@ -1172,17 +2504,17 @@ function buildGraphModel(filtered, focus, w, h) {
   const industryEntries = Array.from(aggregateBy(filtered, "industry").entries()).sort((a, b) => b[1] - a[1]);
   industryEntries.forEach(([industry, count]) => {
     const id = "industry:" + industry;
-    nodes.push(makeGraphNode({ id, label: industry, kind: "industry", count, depth: 1, parentId: rootId }));
+    nodes.push(makeGraphNode({ id, label: industry, displayLabel: industryLabel(industry), kind: "industry", count, depth: 1, parentId: rootId }));
     links.push(makeGraphLink(rootId, id, 190, 0.3));
   });
 
-  let crumb = "图谱层级：行业";
+  let crumb = t("graphLevel") + "：" + t("industry");
   let centerId = rootId;
 
   if (focus.industry) {
     const industryId = "industry:" + focus.industry;
     centerId = industryId;
-    crumb = "图谱层级：行业 / " + focus.industry + " / 产品";
+    crumb = t("graphLevel") + "：" + t("industry") + " / " + industryLabel(focus.industry) + " / " + t("product");
     const subsetIndustry = filtered.filter(a => a.industry === focus.industry);
     const productEntries = Array.from(aggregateBy(subsetIndustry, "product").entries()).sort((a, b) => b[1] - a[1]);
     productEntries.forEach(([product, count]) => {
@@ -1190,6 +2522,7 @@ function buildGraphModel(filtered, focus, w, h) {
       nodes.push(makeGraphNode({
         id,
         label: product,
+        displayLabel: productLabel(product),
         kind: "product",
         count,
         depth: 2,
@@ -1202,7 +2535,7 @@ function buildGraphModel(filtered, focus, w, h) {
     if (focus.product) {
       const productId = "product:" + focus.industry + "|" + focus.product;
       centerId = productId;
-      crumb = "图谱层级：" + focus.industry + " / " + focus.product + " / 刊期";
+      crumb = t("graphLevel") + "：" + industryLabel(focus.industry) + " / " + productLabel(focus.product) + " / " + t("issue");
       const subsetProduct = subsetIndustry.filter(a => a.product === focus.product);
       const issueEntries = Array.from(aggregateBy(subsetProduct, "issueKey").entries())
         .sort((a, b) => issueSortKey(a[0]) - issueSortKey(b[0]));
@@ -1223,7 +2556,7 @@ function buildGraphModel(filtered, focus, w, h) {
       if (focus.issueKey) {
         const issueId = "issue:" + focus.industry + "|" + focus.product + "|" + focus.issueKey;
         centerId = issueId;
-        crumb = "图谱层级：" + focus.industry + " / " + focus.product + " / " + focus.issueKey + " / 广告";
+        crumb = t("graphLevel") + "：" + industryLabel(focus.industry) + " / " + productLabel(focus.product) + " / " + focus.issueKey + " / " + t("ad");
         const ads = subsetProduct.filter(a => a.issueKey === focus.issueKey);
         ads.forEach((ad, idx) => {
           const id = "ad:" + ad.id + ":" + idx;
@@ -1245,6 +2578,7 @@ function buildGraphModel(filtered, focus, w, h) {
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
   if (!nodeMap.has(centerId)) centerId = rootId;
   nodeMap.get(centerId).isCenter = true;
+  assignGraphBubbleSizes(nodes);
 
   const focusDepth = nodeMap.get(centerId).depth;
   const childrenByParent = new Map();
@@ -1281,6 +2615,7 @@ function makeGraphNode(opts) {
       id: opts.id,
       label: opts.label,
       displayLabel: opts.label,
+      displayFullLabel: opts.label,
       kind,
       count: opts.count,
       depth: opts.depth,
@@ -1297,15 +2632,18 @@ function makeGraphNode(opts) {
       subtext: ""
     };
   }
-  const maxChars = 52;
-  const displayLabel = trimLabel(opts.label, maxChars);
-  const isTruncated = displayLabel !== opts.label;
+  const displaySource = opts.displayLabel || opts.label;
+  const displayParts = getGraphDisplayParts(kind, displaySource);
+  const displayLabel = displayParts.label;
+  const isTruncated = !!displayParts.isTruncated;
   const subtext = String(opts.subtext || "");
-  const size = getGraphNodeSize(kind, displayLabel, subtext);
+  const size = getGraphNodeSize(kind, displayLabel, subtext, opts.count);
   return {
     id: opts.id,
     label: opts.label,
     displayLabel,
+    displayFullLabel: displaySource,
+    displayLines: displayParts.lines,
     kind,
     count: opts.count,
     depth: opts.depth,
@@ -1319,26 +2657,122 @@ function makeGraphNode(opts) {
     subtextColor: palette.subtextColor,
     w: size.w,
     h: size.h,
+    r: size.r,
     subtext
   };
 }
 
-function getGraphNodeSize(kind, label, subtext) {
+function getGraphDisplayParts(kind, label) {
+  const raw = String(label || "");
+  if (kind === "issue") {
+    const short = raw.replace(/^19(\d{2})-/, "$1-");
+    return { label: short, lines: [short], isTruncated: short !== raw };
+  }
+  if (state.lang === "en") {
+    const lines = wrapGraphEnglishLabel(raw, kind);
+    return { label: raw, lines, isTruncated: false };
+  }
+  if (kind === "product") {
+    const compact = raw.replace(/[、，,/\s]+/g, "");
+    const visible = compact.length > 4 ? compact.slice(0, 4) + "…" : compact;
+    const lines = visible.length > 2 ? [visible.slice(0, 2), visible.slice(2)] : [visible];
+    return { label: visible, lines, isTruncated: visible !== compact };
+  }
+  const short = trimLabel(raw, 5);
+  return { label: short, lines: [short], isTruncated: short !== raw };
+}
+
+function wrapGraphEnglishLabel(label, kind) {
+  const raw = String(label || "").trim();
+  if (!raw) return [""];
+  const maxChars = kind === "root" ? 7 : kind === "industry" ? 10 : 9;
+  const words = raw.split(/[\s/]+/).filter(Boolean);
+  if (!words.length) return [raw];
+  const lines = [];
+  let current = "";
+  words.forEach(word => {
+    const pieces = word.length > maxChars + 2 ? splitGraphLongWord(word, maxChars) : [word];
+    pieces.forEach(piece => {
+      const next = current ? current + " " + piece : piece;
+      if (current && next.length > maxChars) {
+        lines.push(current);
+        current = piece;
+      } else {
+        current = next;
+      }
+    });
+  });
+  if (current) lines.push(current);
+  return lines;
+}
+
+function splitGraphLongWord(word, maxChars) {
+  const chunks = [];
+  for (let i = 0; i < word.length; i += maxChars) {
+    chunks.push(word.slice(i, i + maxChars));
+  }
+  return chunks;
+}
+
+function assignGraphBubbleSizes(nodes) {
+  const bubbles = nodes.filter(n => n.kind !== "ad" && !n.isCenter);
+  if (!bubbles.length) return;
+  const maxCount = Math.max(1, ...bubbles.map(n => n.count || 0));
+  bubbles.forEach(node => {
+    const ratio = Math.sqrt(Math.max(0, node.count || 0) / maxCount);
+    const r = Math.round(GRAPH_BUBBLE_MIN_R + ratio * (GRAPH_BUBBLE_MAX_R - GRAPH_BUBBLE_MIN_R));
+    node.r = r;
+    node.w = r * 2;
+    node.h = r * 2;
+  });
+}
+
+function getGraphNodeTextScale(node) {
+  if (!node) return "1";
+  const r = Number.isFinite(node.r) ? node.r : 34;
+  if (state.lang === "en" && node.kind !== "issue") {
+    const lines = node.displayLines && node.displayLines.length ? node.displayLines : [node.displayLabel || node.label || ""];
+    const longest = Math.max(1, ...lines.map(line => String(line).length));
+    const horizontal = (r * 1.48) / (longest * 7.2);
+    const vertical = (r * 1.45) / (lines.length * 11);
+    return String(clamp(Math.min(horizontal, vertical), 0.46, 0.92).toFixed(2));
+  }
+  if (node.kind === "product") {
+    if (r < 30) return "0.78";
+    if (r < 38) return "0.86";
+    return "0.92";
+  }
+  if (node.kind !== "issue") return "1";
+  if (r < 30) return "0.68";
+  if (r < 38) return "0.78";
+  return "0.88";
+}
+
+function getGraphCenterTextScale(node) {
+  if (!node || state.lang !== "en") return "1";
+  const lines = node.displayLines && node.displayLines.length ? node.displayLines : [node.displayLabel || node.label || ""];
+  const longest = Math.max(1, ...lines.map(line => String(line).length));
+  const horizontal = (GRAPH_CENTER_CIRCLE_RADIUS * 1.35) / (longest * 8);
+  const vertical = (GRAPH_CENTER_CIRCLE_RADIUS * 1.25) / (lines.length * 13);
+  return String(clamp(Math.min(horizontal, vertical), 0.52, 0.95).toFixed(2));
+}
+
+function getGraphNodeSize(kind, label, subtext, count) {
   const labelFontSize = getRootNumberVar("--graph-node-label-size", 14);
   const labelTracking = getRootNumberVar("--graph-node-label-tracking", 1.3);
   const subtextFontSize = getRootNumberVar("--graph-node-subtext-size", 11);
   const subtextTracking = getRootNumberVar("--graph-node-subtext-tracking", 0.6);
   const hasSubtext = !!subtext;
-  const h = hasSubtext ? 42 : 38;
   const labelWidth = measureGraphTextWidth(label, labelFontSize, 600, labelTracking);
   const subtextWidth = subtext ? measureGraphTextWidth(subtext, subtextFontSize, 400, subtextTracking) : 0;
   const contentWidth = Math.max(labelWidth, subtextWidth);
-  const horizontalPadding = hasSubtext ? 22 : 20;
-  const minWidth = hasSubtext ? 110 : 80;
-  const maxWidth = kind === "issue" ? 640 : 720;
+  const minTextR = Math.max(18, contentWidth * 0.5 + (hasSubtext ? 14 : 10));
+  const countRatio = Math.sqrt(Math.max(1, count || 1));
+  const r = clamp(Math.max(minTextR, 18 + countRatio * 1.2), GRAPH_BUBBLE_MIN_R, GRAPH_BUBBLE_MAX_R);
   return {
-    w: clamp(contentWidth + horizontalPadding * 2, minWidth, maxWidth),
-    h
+    w: r * 2,
+    h: r * 2,
+    r
   };
 }
 
@@ -1447,8 +2881,8 @@ function getGraphNodePalette(opts) {
     return {
       fillColor: null,
       strokeColor: null,
-      textColor: null,
-      subtextColor: null
+      textColor: "#000000",
+      subtextColor: "rgba(0, 0, 0, 0.72)"
     };
   }
 
@@ -1457,8 +2891,8 @@ function getGraphNodePalette(opts) {
     return {
       fillColor: null,
       strokeColor: null,
-      textColor: null,
-      subtextColor: null
+      textColor: "#000000",
+      subtextColor: "rgba(0, 0, 0, 0.72)"
     };
   }
 
@@ -1529,56 +2963,13 @@ function graphNodePadding(node) {
 
 function updateGraphLinkPositions(linkSel) {
   linkSel.each(function(d) {
-    this.setAttribute("d", buildSketchLinkPath(d));
+    this.setAttribute("d", buildStraightLinkPath(d));
   });
 }
 
-function buildSketchLinkPath(link) {
+function buildStraightLinkPath(link) {
   const edge = edgeTrimPoint(link.source, link.target);
-  const dx = edge.x2 - edge.x1;
-  const dy = edge.y2 - edge.y1;
-  const len = Math.hypot(dx, dy) || 1;
-  if (len < 18) {
-    return "M " + edge.x1 + " " + edge.y1 + " L " + edge.x2 + " " + edge.y2;
-  }
-  const ux = dx / len;
-  const uy = dy / len;
-  const px = -uy;
-  const py = ux;
-  const seed = hashString(link.id);
-  const ampBase = Math.min(2.6, Math.max(0.7, len * 0.008));
-  const amp = ampBase * (0.82 + ((seed % 17) / 40));
-  const freq = 1.2 + (((seed >> 3) % 7) * 0.18);
-  const phase = ((seed % 360) * Math.PI) / 180;
-  const steps = Math.max(5, Math.min(10, Math.round(len / 82)));
-  const points = [];
-  for (let i = 0; i <= steps; i += 1) {
-    const t = i / steps;
-    let offset = 0;
-    if (i !== 0 && i !== steps) {
-      const envelope = Math.sin(Math.PI * t);
-      offset = Math.sin((t * freq * Math.PI * 2) + phase) * amp * envelope;
-    }
-    points.push({
-      x: edge.x1 + dx * t + px * offset,
-      y: edge.y1 + dy * t + py * offset
-    });
-  }
-  return pointsToSmoothPath(points);
-}
-
-function pointsToSmoothPath(points) {
-  if (!points.length) return "";
-  if (points.length === 1) return "M " + points[0].x + " " + points[0].y;
-  let path = "M " + points[0].x + " " + points[0].y;
-  for (let i = 1; i < points.length - 1; i += 1) {
-    const midX = (points[i].x + points[i + 1].x) * 0.5;
-    const midY = (points[i].y + points[i + 1].y) * 0.5;
-    path += " Q " + points[i].x + " " + points[i].y + " " + midX + " " + midY;
-  }
-  const last = points[points.length - 1];
-  path += " T " + last.x + " " + last.y;
-  return path;
+  return "M " + edge.x1 + " " + edge.y1 + " L " + edge.x2 + " " + edge.y2;
 }
 
 function hashString(value) {
@@ -1614,6 +3005,10 @@ function getGraphNodeBoundaryPoint(node, dirX, dirY) {
   }
 
   const strokeOutset = node.kind === "ad" ? 0 : GRAPH_NODE_STROKE_WIDTH * 0.5;
+  if (node.kind !== "ad") {
+    const radius = (Number.isFinite(node.r) ? node.r : Math.min(node.w, node.h) * 0.5) + strokeOutset;
+    return { x: ux * radius, y: uy * radius };
+  }
   const halfW = Math.max(0.01, node.w * 0.5 + strokeOutset);
   const halfH = Math.max(0.01, node.h * 0.5 + strokeOutset);
   const cornerRadius = node.kind === "ad" ? 0 : Math.min(18, node.h * 0.5) + strokeOutset;
@@ -1764,7 +3159,7 @@ function showGraphNodeTooltip(event, node) {
   if (node.kind === "ad") {
     refs.tooltip.textContent = node.label;
   } else {
-    refs.tooltip.textContent = node.label + " | " + node.count + "条";
+    refs.tooltip.textContent = (node.displayFullLabel || node.displayLabel || node.label) + " | " + countText(node.count);
   }
   moveTooltip(event);
 }
@@ -1782,10 +3177,13 @@ function stepGraphBack() {
 
 function openDetailModal(ad) {
   state.detailAd = ad;
+  state.detailSourceMode = state.mode;
   refs.detailImg.src = ad.imgSrc;
   refs.detailTitle.textContent = ad.id;
-  refs.detailMeta.textContent = ad.year + " 年 / 第 " + ad.issue + " 期 / " + ad.industry + " / " + ad.product;
-  refs.detailFoot.textContent = "图谱路径：" + ad.industry + " → " + ad.product + " → " + ad.issueKey + " → " + ad.id;
+  refs.detailMeta.textContent = state.lang === "en"
+    ? ad.year + " / " + t("issuePrefix") + ad.issue + " / " + industryLabel(ad.industry) + " / " + productLabel(ad.product)
+    : ad.year + " 年 / 第 " + ad.issue + " 期 / " + ad.industry + " / " + ad.product;
+  refs.detailFoot.textContent = t("graphPath") + "：" + industryLabel(ad.industry) + " → " + productLabel(ad.product) + " → " + ad.issueKey + " → " + ad.id;
 
   refs.detailTags.innerHTML = "";
   const tags = ad.tagList.length ? ad.tagList : [];
@@ -1793,17 +3191,18 @@ function openDetailModal(ad) {
     const def = TAG_DEFS.find(t => t.code === code);
     const chip = document.createElement("span");
     chip.className = "mini-tag";
-    chip.textContent = def ? def.label : code;
+    chip.textContent = def ? tagLabel(code) : code;
+    chip.title = chip.textContent;
     refs.detailTags.appendChild(chip);
   });
   if (!tags.length) {
-    refs.detailTags.innerHTML = "<span class=\"mini-tag\">无维度标签</span>";
+    refs.detailTags.innerHTML = "<span class=\"mini-tag\">" + escapeHtml(t("noFeatureTag")) + "</span>";
   }
 
   const sim = findSimilarAds(ad, 4);
   refs.similarRow.innerHTML = "";
   if (!sim.length) {
-    refs.similarRow.innerHTML = "<div class=\"empty\">未找到相似广告</div>";
+    refs.similarRow.innerHTML = "<div class=\"empty\">" + escapeHtml(t("noSimilar")) + "</div>";
   } else {
     sim.forEach(item => {
       const card = document.createElement("div");
@@ -1813,17 +3212,60 @@ function openDetailModal(ad) {
       const tagClass = tagLen >= 7 ? " tight" : (tagLen >= 5 ? " compact" : "");
       const idLen = (item.ad.id || "").length;
       const idClass = idLen >= 13 ? " tight" : (idLen >= 11 ? " compact" : "");
-      card.innerHTML = "<img src=\"" + item.ad.imgSrc + "\" alt=\"\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\">" + escapeHtml(item.ad.industry) + "</span><span class=\"mini-tag\">" + escapeHtml(item.ad.product) + "</span></div></div></div>";
+      const similarIndustry = industryLabel(item.ad.industry);
+      const similarProduct = productLabel(item.ad.product);
+      card.innerHTML = "<img src=\"" + item.ad.imgSrc + "\" alt=\"\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\" title=\"" + escapeHtml(similarIndustry) + "\">" + escapeHtml(similarIndustry) + "</span><span class=\"mini-tag\" title=\"" + escapeHtml(similarProduct) + "\">" + escapeHtml(similarProduct) + "</span></div></div></div>";
       card.addEventListener("click", () => openDetailModal(item.ad));
       refs.similarRow.appendChild(card);
     });
   }
 
   refs.detailModal.classList.add("open");
+  updateDetailLocateButton();
 }
 
 function closeDetailModal() {
   refs.detailModal.classList.remove("open");
+}
+
+function updateDetailLocateButton() {
+  if (!refs.focusInGraphBtn) return;
+  const targetMode = state.detailSourceMode === "graph" ? "timeline" : "graph";
+  refs.focusInGraphBtn.dataset.targetMode = targetMode;
+  refs.focusInGraphBtn.textContent = targetMode === "timeline" ? t("locateInTimeline") : t("locateInGraph");
+}
+
+function locateAdInTimeline(ad) {
+  if (!ad) return;
+  state.timelineAutoFit = false;
+  setMode("timeline");
+  requestAnimationFrame(() => {
+    focusTimelineAd(ad);
+  });
+}
+
+function focusTimelineAd(ad) {
+  const rect = ad.timelineRect;
+  const layout = state.timelineLayout;
+  if (!rect || !layout) return;
+  const bounds = getTimelineScaleBounds();
+  const cam = state.cameras.timeline;
+  const viewW = Math.max(1, refs.timelineContainer.clientWidth);
+  const viewH = Math.max(1, refs.timelineContainer.clientHeight - layout.axisOverlayH);
+  const nextScale = clamp(Math.max(cam.scale, bounds.min * 1.35, 1.2), bounds.min, bounds.max);
+  cam.scale = nextScale;
+  cam.x = viewW * 0.5 - (rect.x + rect.w * 0.5) * nextScale;
+  cam.y = viewH * 0.44 - (rect.y + rect.h * 0.5) * nextScale;
+  state.timelineAutoFit = false;
+  applyCamera("timeline");
+  flashTimelineAd(ad.id);
+}
+
+function flashTimelineAd(adId) {
+  const el = Array.from(refs.timelineStage.querySelectorAll(".ad-point")).find(node => node.dataset.adId === adId);
+  if (!el) return;
+  el.classList.add("ad-point-focus");
+  window.setTimeout(() => el.classList.remove("ad-point-focus"), 1600);
 }
 
 function findSimilarAds(target, count) {
@@ -1888,7 +3330,7 @@ function trimLabel(s, n) {
 
 function showTooltip(e, adLike) {
   refs.tooltip.style.display = "block";
-  refs.tooltip.textContent = adLike.id + " | " + (adLike.industry || "") + " | " + (adLike.product || "");
+  refs.tooltip.textContent = adLike.id + " | " + industryLabel(adLike.industry || "") + " | " + productLabel(adLike.product || "");
   moveTooltip(e);
 }
 

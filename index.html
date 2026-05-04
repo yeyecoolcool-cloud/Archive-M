@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Archive Vis - 双模式</title>
+  <title>Archive-M</title>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -11,20 +11,21 @@
   <div class="app-shell">
     <header class="top-bar">
       <div class="brand">
-        <div class="brand-title">Model · 双模式浏览</div>
-        <div class="brand-sub">时间轴模式 + 图谱模式（行业 → 产品 → 刊期 → 广告）</div>
+        <div class="brand-title">Archive-M</div>
+        <div class="brand-sub" data-i18n="brandSub">机联会刊广告数字化平台</div>
       </div>
       <div class="toolbar-center">
         <div class="filter-groups" id="tagRail"></div>
       </div>
       <div class="toolbar-right">
-        <button class="btn" id="clearTagBtn">清空维度</button>
-        <button class="btn primary" id="resetBtn">重置</button>
+        <button class="btn lang-toggle" id="langToggleBtn" type="button">EN</button>
+        <button class="btn primary" id="resetBtn" data-i18n="reset">重置</button>
         <div class="view-switch" id="viewSwitch">
-          <button class="btn view-toggle" id="viewToggleBtn" aria-expanded="false">视图</button>
+          <button class="btn view-toggle" id="viewToggleBtn" aria-expanded="false" data-i18n="view">视图</button>
           <div class="view-menu-panel" id="viewMenuPanel">
-            <button class="mode-btn active" data-mode="timeline">时间轴模式</button>
-            <button class="mode-btn" data-mode="graph">图谱模式</button>
+            <button class="mode-btn active" data-mode="timeline" data-i18n="timelineMode">总览模式</button>
+            <button class="mode-btn" data-mode="graph" data-i18n="graphMode">图谱模式</button>
+            <button class="mode-btn" data-mode="visual" data-i18n="visualPanel">数量模式</button>
           </div>
         </div>
       </div>
@@ -40,61 +41,78 @@
         </div>
         <div class="view" id="graphView">
           <div class="graph-header">
-            <button class="btn" id="graphBackBtn">返回上一层</button>
+            <button class="btn" id="graphBackBtn" data-i18n="back">返回上一层</button>
             <div class="crumb" id="graphCrumb">图谱层级：行业</div>
           </div>
           <svg class="graph-svg" id="graphSvg"></svg>
         </div>
-      </section>
-
-      <aside class="sidebar">
-        <section class="panel stats-panel">
-          <div class="stats-panel-inner">
-            <div class="panel-title">当前筛选状态</div>
-            <div class="stats">
-              <div class="stat-box">
-                <div class="stat-box-inner">
-                  <div class="stat-label">匹配广告</div>
-                  <div class="stat-val" id="statAds">0</div>
-                </div>
+        <div class="view" id="visualView">
+          <div class="visual-panel-view">
+            <div class="visual-heatmap-wrap" id="visualHeatmapWrap"></div>
+            <div class="visual-controls-row">
+              <div class="visual-axis-toggle" id="visualAxisToggle">
+                <button class="visual-axis-btn active" type="button" data-axis="time" data-i18n="timeAxis">时间轴</button>
+                <button class="visual-axis-btn" type="button" data-axis="industry" data-i18n="industryAxis">行业轴</button>
               </div>
-              <div class="stat-box">
-                <div class="stat-box-inner">
-                  <div class="stat-label">覆盖刊期</div>
-                  <div class="stat-val" id="statIssues">0</div>
-                </div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-box-inner">
-                  <div class="stat-label">行业数</div>
-                  <div class="stat-val" id="statIndustries">0</div>
-                </div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-box-inner">
-                  <div class="stat-label">产品数</div>
-                  <div class="stat-val" id="statProducts">0</div>
-                </div>
+              <div class="visual-metric-controls" id="visualMetricControls">
+                <button class="visual-metric-btn active" type="button" data-metric="axisShare">行业→特征</button>
+                <button class="visual-metric-btn" type="button" data-metric="tagShare">特征→行业</button>
               </div>
             </div>
+            <div class="visual-axis" id="visualAxis"></div>
+            <div class="visual-legend">
+              <span data-i18n="less">少</span>
+              <div class="visual-legend-scale"></div>
+              <span data-i18n="more">多</span>
+            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
+      <button class="sidebar-toggle" id="sidebarToggleBtn" type="button" aria-expanded="true" aria-label="收起筛选面板">›</button>
+      <aside class="sidebar">
         <section class="panel industry-panel">
-          <div class="panel-title">行业 / 产品筛选</div>
+          <div class="panel-title" data-i18n="industryProductFilter">行业 / 产品筛选</div>
           <div id="industryList"></div>
         </section>
-
-        <section class="panel">
-          <div class="panel-title">图谱说明</div>
-          <div class="legend">
-            图谱模式按层级钻取：行业 → 产品 → 刊期 → 广告。<br>
-            点击任一节点可进入下一层，右上角“返回上一层”可回退。<br>
-            画布支持拖动平移；触控板捏合或 Ctrl/Alt + 滚轮可缩放。<br>
-            若同时用了顶部维度筛选和右侧产品筛选，图谱会实时联动。
-          </div>
-        </section>
       </aside>
+
+      <section class="analysis-drawer" id="analysisDrawer" aria-hidden="true">
+        <div class="analysis-drawer-head">
+          <div class="analysis-drawer-title-row">
+            <div class="panel-title" data-i18n="analysisPanel">分析面板</div>
+            <button class="analysis-collapse-btn" id="analysisCollapseBtn" type="button" aria-expanded="true">收起</button>
+          </div>
+          <div class="stats">
+            <div class="stat-box"><div class="stat-box-inner"><div class="stat-label" data-i18n="matchedAds">匹配广告</div><div class="stat-val" id="statAds">0</div></div></div>
+            <div class="stat-box"><div class="stat-box-inner"><div class="stat-label" data-i18n="coveredIssues">覆盖刊期</div><div class="stat-val" id="statIssues">0</div></div></div>
+            <div class="stat-box"><div class="stat-box-inner"><div class="stat-label" data-i18n="industryCount">行业数</div><div class="stat-val" id="statIndustries">0</div></div></div>
+            <div class="stat-box"><div class="stat-box-inner"><div class="stat-label" data-i18n="productCount">产品数</div><div class="stat-val" id="statProducts">0</div></div></div>
+          </div>
+          <div class="analysis-grid">
+            <div class="analysis-kv">
+              <span data-i18n="timeSpan">时间跨度</span>
+              <strong id="analysisYearSpan">-</strong>
+            </div>
+          </div>
+        </div>
+        <div class="analysis-drawer-body">
+          <div class="analysis-section analysis-section-wide analysis-curves-section">
+            <div class="analysis-section-head">
+              <div class="analysis-subtitle" data-i18n="industryDashboard">行业数量看板</div>
+              <div class="analysis-unit-toggle" id="analysisCurveUnitToggle" aria-label="行业数量看板单位">
+                <button class="analysis-unit-btn active" type="button" data-unit="year" data-i18n="yearUnit">年份</button>
+                <button class="analysis-unit-btn" type="button" data-unit="issue" data-i18n="issueUnit">期刊</button>
+              </div>
+            </div>
+            <div class="analysis-curves-grid" id="analysisIndustryCurves"></div>
+          </div>
+          <div class="analysis-section">
+            <div class="analysis-subtitle" data-i18n="topFeatures">高频维度</div>
+            <div class="analysis-tags" id="analysisTags"></div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -113,12 +131,12 @@
         <div class="modal-content">
           <div class="meta-line" id="detailMeta"></div>
           <div class="detail-section">
-            <div class="similar-title">维度编码</div>
+            <div class="similar-title" data-i18n="featureCodes">维度编码</div>
             <div class="tag-box" id="detailTags"></div>
           </div>
           <div class="detail-divider"></div>
           <div class="detail-section">
-            <div class="similar-title">相似广告</div>
+            <div class="similar-title" data-i18n="similarAds">相似广告</div>
             <div class="similar-row" id="similarRow"></div>
           </div>
         </div>
