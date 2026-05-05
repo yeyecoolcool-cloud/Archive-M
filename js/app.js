@@ -44,10 +44,13 @@ const UI_TEXT = {
     productCount: "产品数",
     timeSpan: "时间跨度",
     industryDashboard: "行业数量看板",
+    yearUnit: "年份",
+    issueUnit: "期刊",
     topFeatures: "高频维度",
     featureCodes: "维度编码",
     featureExplain: "特征解释",
     similarAds: "相似广告",
+    detailBack: "返回",
     locateInGraph: "在图谱中定位",
     locateInTimeline: "在时间轴中定位",
     noData: "无数据",
@@ -98,10 +101,13 @@ const UI_TEXT = {
     productCount: "Products",
     timeSpan: "Time Span",
     industryDashboard: "Industry Count Dashboard",
+    yearUnit: "Year",
+    issueUnit: "Issue",
     topFeatures: "Top Features",
     featureCodes: "Feature Codes",
     featureExplain: "Feature Note",
     similarAds: "Similar Ads",
+    detailBack: "Back",
     locateInGraph: "Locate in Graph",
     locateInTimeline: "Locate in Timeline",
     noData: "No Data",
@@ -472,6 +478,7 @@ const state = {
   graphFocus: { industry: null, product: null, issueKey: null },
   detailAd: null,
   detailSourceMode: "timeline",
+  detailHistory: [],
   cameras: {
     timeline: { x: 0, y: 0, scale: 1 },
     graph: { x: 0, y: 0, scale: 1 }
@@ -488,6 +495,8 @@ const state = {
   graphRootEl: null,
   timelineAutoFit: true,
   analysisIndustryPanels: [],
+  analysisIndustryPanelKey: "",
+  analysisCurveUnit: "year",
   expandedAxisIssueKey: null,
   analysisCollapsed: false,
   visualExpandedTag: null,
@@ -529,11 +538,13 @@ const refs = {
   analysisDrawer: document.getElementById("analysisDrawer"),
   analysisCollapseBtn: document.getElementById("analysisCollapseBtn"),
   analysisYearSpan: document.getElementById("analysisYearSpan"),
+  analysisCurveUnitToggle: document.getElementById("analysisCurveUnitToggle"),
   analysisIndustryCurves: document.getElementById("analysisIndustryCurves"),
   analysisTags: document.getElementById("analysisTags"),
   tooltip: document.getElementById("tooltip"),
   detailModal: document.getElementById("detailModal"),
   closeModalBtn: document.getElementById("closeModalBtn"),
+  detailBackBtn: document.getElementById("detailBackBtn"),
   detailImg: document.getElementById("detailImg"),
   detailTitle: document.getElementById("detailTitle"),
   detailMeta: document.getElementById("detailMeta"),
@@ -579,7 +590,7 @@ function bindGlobalEvents() {
       renderTagRail();
       renderSidebar();
       renderAll();
-      if (state.detailAd) openDetailModal(state.detailAd);
+      if (state.detailAd) openDetailModal(state.detailAd, { preserveSource: true, preserveHistory: true });
     });
   }
 
@@ -592,6 +603,9 @@ function bindGlobalEvents() {
     state.graphFocus = { industry: null, product: null, issueKey: null };
     state.timelineAutoFit = true;
     state.analysisCollapsed = false;
+    state.analysisIndustryPanels = [];
+    state.analysisIndustryPanelKey = "";
+    state.analysisCurveUnit = "year";
     state.visualExpandedTag = null;
     state.visualScale = 1;
     state.visualAxisMode = "time";
@@ -608,6 +622,17 @@ function bindGlobalEvents() {
     state.analysisCollapsed = !state.analysisCollapsed;
     renderAll();
   });
+  if (refs.analysisCurveUnitToggle) {
+    refs.analysisCurveUnitToggle.addEventListener("click", (event) => {
+      const btn = event.target.closest(".analysis-unit-btn");
+      if (!btn) return;
+      const unit = btn.dataset.unit === "issue" ? "issue" : "year";
+      if (state.analysisCurveUnit === unit) return;
+      state.analysisCurveUnit = unit;
+      syncAnalysisCurveUnitToggle();
+      renderAnalysisIndustryCurves(getFilteredAds());
+    });
+  }
   if (refs.sidebarToggleBtn) {
     refs.sidebarToggleBtn.addEventListener("click", () => {
       state.sidebarCollapsed = !state.sidebarCollapsed;
@@ -616,6 +641,16 @@ function bindGlobalEvents() {
     });
   }
   refs.closeModalBtn.addEventListener("click", closeDetailModal);
+  if (refs.detailBackBtn) {
+    refs.detailBackBtn.addEventListener("click", () => {
+      const previous = state.detailHistory.pop();
+      if (!previous) return;
+      openDetailModal(previous.ad, {
+        sourceMode: previous.sourceMode,
+        preserveHistory: true
+      });
+    });
+  }
   refs.timelineAxisOverlay.addEventListener("click", (e) => {
     if (e.target.closest(".axis-stack-bar")) return;
     if (!state.expandedAxisIssueKey) return;
@@ -654,6 +689,9 @@ function bindGlobalEvents() {
     if (!e.target.closest(".view-switch") && state.viewMenuOpen) {
       state.viewMenuOpen = false;
       syncViewMenu();
+    }
+    if (!e.target.closest(".analysis-curve-picker")) {
+      document.querySelectorAll(".analysis-curve-picker.open").forEach(picker => picker.classList.remove("open"));
     }
   });
 
@@ -724,7 +762,9 @@ function applyLanguage() {
   }
   syncSidebarState();
   updateDetailLocateButton();
+  syncDetailBackButton();
   syncVisualAxisButtonText();
+  syncAnalysisCurveUnitToggle();
 }
 
 function syncSidebarState() {
@@ -780,6 +820,15 @@ function syncVisualAxisButtonText() {
     if (timeBtn) timeBtn.textContent = t("timeAxis");
     if (industryBtn) industryBtn.textContent = t("industryAxis");
   }
+}
+
+function syncAnalysisCurveUnitToggle() {
+  if (!refs.analysisCurveUnitToggle) return;
+  refs.analysisCurveUnitToggle.querySelectorAll(".analysis-unit-btn").forEach(btn => {
+    const isActive = btn.dataset.unit === state.analysisCurveUnit;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
 }
 
 function syncViewMenu() {
@@ -1467,6 +1516,7 @@ function renderAnalysisPanel(filtered) {
 function renderAnalysisIndustryCurves(filtered) {
   const container = refs.analysisIndustryCurves;
   container.innerHTML = "";
+  syncAnalysisCurveUnitToggle();
   const industryEntries = Array.from(aggregateBy(filtered, "industry").entries()).sort((a, b) => b[1] - a[1]);
   const availableIndustries = industryEntries.map(([industry]) => industry);
   if (!availableIndustries.length) {
@@ -1475,11 +1525,9 @@ function renderAnalysisIndustryCurves(filtered) {
   }
 
   syncAnalysisIndustryPanels(availableIndustries);
-  const years = Array.from(new Set(state.issues.map(issue => issue.year))).sort((a, b) => a - b);
+  const axisItems = getAnalysisCurveAxisItems();
   const panelIndustries = state.analysisIndustryPanels.slice(0, 4);
-  const maxYearCount = Math.max(1, ...panelIndustries.map(industry => {
-    return Math.max(0, ...years.map(year => filtered.filter(ad => ad.industry === industry && ad.year === year).length));
-  }));
+  const maxAxisCount = getAnalysisCurveMax(filtered, panelIndustries, axisItems);
 
   panelIndustries.forEach((industry, panelIndex) => {
     const panel = document.createElement("div");
@@ -1490,36 +1538,56 @@ function renderAnalysisIndustryCurves(filtered) {
     const title = document.createElement("div");
     title.className = "analysis-curve-title";
     title.textContent = industry ? industryLabel(industry) : "-";
-    const select = document.createElement("select");
-    select.className = "analysis-curve-select";
-    select.setAttribute("aria-label", t("filterPanelAria"));
+    const picker = document.createElement("div");
+    picker.className = "analysis-curve-picker";
+    const pickerBtn = document.createElement("button");
+    pickerBtn.type = "button";
+    pickerBtn.className = "analysis-curve-select";
+    pickerBtn.setAttribute("aria-label", t("filterPanelAria"));
+    const pickerMenu = document.createElement("div");
+    pickerMenu.className = "analysis-curve-menu";
     availableIndustries.forEach(optionIndustry => {
-      const option = document.createElement("option");
-      option.value = optionIndustry;
+      const option = document.createElement("button");
+      option.type = "button";
+      option.className = "analysis-curve-option" + (optionIndustry === industry ? " active" : "");
       option.textContent = industryLabel(optionIndustry);
-      option.selected = optionIndustry === industry;
-      select.appendChild(option);
+      option.addEventListener("click", (event) => {
+        event.stopPropagation();
+        state.analysisIndustryPanels[panelIndex] = optionIndustry;
+        renderAnalysisIndustryCurves(filtered);
+      });
+      pickerMenu.appendChild(option);
     });
-    select.addEventListener("change", () => {
-      state.analysisIndustryPanels[panelIndex] = select.value;
-      renderAnalysisIndustryCurves(filtered);
+    pickerBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      document.querySelectorAll(".analysis-curve-picker.open").forEach(openPicker => {
+        if (openPicker !== picker) openPicker.classList.remove("open");
+      });
+      picker.classList.toggle("open");
     });
+    picker.appendChild(pickerBtn);
+    picker.appendChild(pickerMenu);
     head.appendChild(title);
-    head.appendChild(select);
+    head.appendChild(picker);
 
-    const svg = buildIndustryAreaSvg(filtered, industry, years, maxYearCount);
-    const yearRail = buildAreaYearRail(years);
+    const svg = buildIndustryAreaSvg(filtered, industry, axisItems, maxAxisCount);
+    const axisRail = buildAreaAxisRail(axisItems);
     const hoverLabel = document.createElement("div");
     hoverLabel.className = "analysis-area-html-label";
     panel.appendChild(head);
     panel.appendChild(svg);
-    panel.appendChild(yearRail);
+    panel.appendChild(axisRail);
     panel.appendChild(hoverLabel);
     container.appendChild(panel);
   });
 }
 
 function syncAnalysisIndustryPanels(availableIndustries) {
+  const nextKey = availableIndustries.join("|");
+  if (state.analysisIndustryPanelKey !== nextKey) {
+    state.analysisIndustryPanels = [];
+    state.analysisIndustryPanelKey = nextKey;
+  }
   const preserved = state.analysisIndustryPanels.filter(industry => availableIndustries.includes(industry));
   const next = preserved.slice(0, 4);
   availableIndustries.forEach(industry => {
@@ -1530,18 +1598,51 @@ function syncAnalysisIndustryPanels(availableIndustries) {
   state.analysisIndustryPanels = next;
 }
 
-function buildIndustryAreaSvg(filtered, industry, years, maxCount) {
+function getAnalysisCurveAxisItems() {
+  if (state.analysisCurveUnit === "issue") {
+    return state.issues.map(issue => ({
+      key: issue.key,
+      label: issue.key,
+      axisLabel: String(issue.issue),
+      issue,
+      type: "issue"
+    }));
+  }
+  const years = Array.from(new Set(state.issues.map(issue => issue.year))).sort((a, b) => a - b);
+  return years.map(year => ({
+    key: String(year),
+    label: String(year),
+    axisLabel: String(year),
+    year,
+    type: "year"
+  }));
+}
+
+function getAnalysisCurveCount(filtered, industry, axisItem) {
+  if (!axisItem) return 0;
+  if (axisItem.type === "issue") {
+    return filtered.filter(ad => ad.industry === industry && ad.issueKey === axisItem.key).length;
+  }
+  return filtered.filter(ad => ad.industry === industry && ad.year === axisItem.year).length;
+}
+
+function getAnalysisCurveMax(filtered, industries, axisItems) {
+  return Math.max(1, ...industries.map(industry =>
+    Math.max(0, ...axisItems.map(axisItem => getAnalysisCurveCount(filtered, industry, axisItem)))
+  ));
+}
+
+function buildIndustryAreaSvg(filtered, industry, axisItems, maxCount) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 320 112");
   svg.setAttribute("preserveAspectRatio", "none");
   svg.classList.add("analysis-area-svg");
   svg.dataset.industry = industry;
   const color = INDUSTRY_COLORS[industry] || INDUSTRY_COLORS["其他"];
-  const values = years.map(year => ({
-    year,
-    count: filtered.filter(ad => ad.industry === industry && ad.year === year).length
+  const values = axisItems.map(axisItem => ({
+    ...axisItem,
+    count: getAnalysisCurveCount(filtered, industry, axisItem)
   }));
-  const total = values.reduce((sum, d) => sum + d.count, 0);
   const xFor = (idx) => values.length <= 1 ? 22 : 22 + idx * (276 / (values.length - 1));
   const yFor = (count) => 90 - (count / Math.max(1, maxCount)) * 64;
   const topPoints = values.map((d, idx) => xFor(idx) + "," + yFor(d.count));
@@ -1576,40 +1677,68 @@ function buildIndustryAreaSvg(filtered, industry, years, maxCount) {
     hit.setAttribute("width", String(Math.max(10, (nextX - prevX) / 2)));
     hit.setAttribute("height", "112");
     hit.setAttribute("class", "analysis-area-hit");
-    hit.dataset.year = String(d.year);
-    hit.addEventListener("mouseenter", () => syncAreaHover(d.year));
-    hit.addEventListener("mousemove", () => syncAreaHover(d.year));
+    hit.dataset.key = String(d.key);
+    hit.addEventListener("mouseenter", () => syncAreaHover(d.key));
+    hit.addEventListener("mousemove", () => syncAreaHover(d.key));
     hit.addEventListener("mouseleave", clearAreaHover);
     svg.appendChild(hit);
   });
   return svg;
 }
 
-function buildAreaYearRail(years) {
+function buildAreaAxisRail(axisItems) {
   const rail = document.createElement("div");
   rail.className = "analysis-area-years";
-  years.forEach((year) => {
+  getAnalysisAxisTickIndexes(axisItems).forEach((idx) => {
+    const axisItem = axisItems[idx];
     const item = document.createElement("span");
-    item.textContent = String(year);
+    item.textContent = axisItem.axisLabel;
+    item.style.left = axisItems.length <= 1 ? "50%" : ((idx / (axisItems.length - 1)) * 100).toFixed(3) + "%";
     rail.appendChild(item);
   });
   return rail;
 }
 
-function syncAreaHover(year) {
+function getAnalysisAxisTickIndexes(axisItems) {
+  if (axisItems.length <= 8 || state.analysisCurveUnit === "year") return axisItems.map((_, idx) => idx);
+  const indexes = new Set([0, axisItems.length - 1]);
+  const issues = axisItems.map(item => Number(item.issue && item.issue.issue)).filter(Number.isFinite);
+  const minIssue = Math.min(...issues);
+  const maxIssue = Math.max(...issues);
+  const span = Math.max(1, maxIssue - minIssue);
+  const rough = span / 6;
+  const steps = [5, 10, 20, 25, 50];
+  const step = steps.find(value => value >= rough) || 50;
+  for (let tick = Math.ceil(minIssue / step) * step; tick <= maxIssue; tick += step) {
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    axisItems.forEach((item, idx) => {
+      const issueNo = Number(item.issue && item.issue.issue);
+      const dist = Math.abs(issueNo - tick);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = idx;
+      }
+    });
+    indexes.add(bestIdx);
+  }
+  return Array.from(indexes).sort((a, b) => a - b);
+}
+
+function syncAreaHover(axisKey) {
   document.querySelectorAll(".analysis-area-svg").forEach(svg => {
     const industry = svg.dataset.industry || "";
     const filtered = getFilteredAds();
-    const industryYearAds = filtered.filter(ad => ad.industry === industry && ad.year === year);
-    const years = Array.from(new Set(state.issues.map(issue => issue.year))).sort((a, b) => a - b);
+    const axisItems = getAnalysisCurveAxisItems();
+    const axisItem = axisItems.find(item => item.key === String(axisKey));
+    if (!axisItem) return;
     const panelIndustries = state.analysisIndustryPanels.slice(0, 4);
-    const maxYearCount = Math.max(1, ...panelIndustries.map(panelIndustry =>
-      Math.max(0, ...years.map(y => filtered.filter(ad => ad.industry === panelIndustry && ad.year === y).length))
-    ));
-    const idx = years.indexOf(year);
+    const maxAxisCount = getAnalysisCurveMax(filtered, panelIndustries, axisItems);
+    const count = getAnalysisCurveCount(filtered, industry, axisItem);
+    const idx = axisItems.findIndex(item => item.key === String(axisKey));
     if (idx < 0) return;
-    const x = years.length <= 1 ? 22 : 22 + idx * (276 / (years.length - 1));
-    const y = 90 - (industryYearAds.length / Math.max(1, maxYearCount)) * 64;
+    const x = axisItems.length <= 1 ? 22 : 22 + idx * (276 / (axisItems.length - 1));
+    const y = 90 - (count / Math.max(1, maxAxisCount)) * 64;
     const v = svg.querySelector(".analysis-area-guide-v");
     const h = svg.querySelector(".analysis-area-guide-h");
     const label = svg.parentElement ? svg.parentElement.querySelector(".analysis-area-html-label") : null;
@@ -1628,7 +1757,7 @@ function syncAreaHover(year) {
         : "calc(" + ((x / 320) * 100).toFixed(3) + "% + 8px)";
       label.style.top = "calc(" + ((y / 112) * 100).toFixed(3) + "% - 28px)";
       label.style.transform = nearRightEdge ? "translateX(-100%)" : "translateX(0)";
-      label.textContent = year + " / " + industryLabel(industry) + " / " + countText(industryYearAds.length);
+      label.textContent = axisItem.label + " / " + industryLabel(industry) + " / " + countText(count);
     }
     svg.classList.add("hovering");
   });
@@ -3175,9 +3304,19 @@ function stepGraphBack() {
   renderGraph(getFilteredAds());
 }
 
-function openDetailModal(ad) {
+function openDetailModal(ad, options = {}) {
+  if (options.pushHistory && state.detailAd) {
+    state.detailHistory.push({
+      ad: state.detailAd,
+      sourceMode: state.detailSourceMode
+    });
+  }
   state.detailAd = ad;
-  state.detailSourceMode = state.mode;
+  if (options.preserveSource) {
+    state.detailSourceMode = state.detailSourceMode || state.mode;
+  } else {
+    state.detailSourceMode = options.sourceMode || state.mode;
+  }
   refs.detailImg.src = ad.imgSrc;
   refs.detailTitle.textContent = ad.id;
   refs.detailMeta.textContent = state.lang === "en"
@@ -3215,17 +3354,29 @@ function openDetailModal(ad) {
       const similarIndustry = industryLabel(item.ad.industry);
       const similarProduct = productLabel(item.ad.product);
       card.innerHTML = "<img src=\"" + item.ad.imgSrc + "\" alt=\"\"><div class=\"similar-caption\"><span class=\"similar-count" + countClass + "\">" + escapeHtml(String(item.sharedCount)) + "</span><div class=\"similar-meta\"><span class=\"similar-id" + idClass + "\">" + escapeHtml(item.ad.id) + "</span><div class=\"similar-tags" + tagClass + "\"><span class=\"mini-tag\" title=\"" + escapeHtml(similarIndustry) + "\">" + escapeHtml(similarIndustry) + "</span><span class=\"mini-tag\" title=\"" + escapeHtml(similarProduct) + "\">" + escapeHtml(similarProduct) + "</span></div></div></div>";
-      card.addEventListener("click", () => openDetailModal(item.ad));
+      card.addEventListener("click", () => openDetailModal(item.ad, {
+        pushHistory: true,
+        preserveSource: true
+      }));
       refs.similarRow.appendChild(card);
     });
   }
 
   refs.detailModal.classList.add("open");
+  syncDetailBackButton();
   updateDetailLocateButton();
 }
 
 function closeDetailModal() {
   refs.detailModal.classList.remove("open");
+  state.detailHistory = [];
+  syncDetailBackButton();
+}
+
+function syncDetailBackButton() {
+  if (!refs.detailBackBtn) return;
+  refs.detailBackBtn.hidden = !state.detailHistory.length;
+  refs.detailBackBtn.textContent = t("detailBack");
 }
 
 function updateDetailLocateButton() {
